@@ -1,0 +1,2534 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="النهضة">
+<meta name="theme-color" content="#0a0e1a">
+<meta name="description" content="تطبيق إدارة مشروع النهضة — مصروفات، شركاء، دراسة جدوى">
+<link rel="manifest" href="manifest.json">
+<title>مشروع النهضة</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1f2d45;
+    --gold: #c9a227;
+    --gold2: #f0c040;
+    --blue: #1e6fff;
+    --blue2: #4d9fff;
+    --red: #e53e5a;
+    --green: #22c55e;
+    --text: #e8eaf0;
+    --muted: #6b7a99;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    direction: rtl;
+  }
+
+  /* NAV */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 24px #00000066;
+  }
+
+  .logo {
+    font-size: 20px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  nav { display: flex; gap: 8px; }
+
+  nav button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  nav button.active, nav button:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  nav button.active {
+    color: var(--gold);
+    border: 1px solid #c9a22744;
+  }
+
+  /* MAIN */
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s;
+  }
+
+  .stat-card:hover { transform: translateY(-2px); }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px; height: 100%;
+    border-radius: 0 var(--radius) var(--radius) 0;
+  }
+
+  .stat-card.gold::before { background: linear-gradient(180deg, var(--gold), var(--gold2)); }
+  .stat-card.blue::before { background: linear-gradient(180deg, var(--blue), var(--blue2)); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.red::before { background: var(--red); }
+
+  .stat-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; font-weight: 500; }
+  .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+  .stat-card.gold .stat-value { color: var(--gold2); }
+  .stat-card.blue .stat-value { color: var(--blue2); }
+  .stat-card.green .stat-value { color: var(--green); }
+  .stat-card.red .stat-value { color: var(--red); }
+
+  /* SECTION */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 18px; font-weight: 800; color: var(--text);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .section-title span.dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--gold); display: inline-block;
+  }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead tr {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    text-align: right;
+    letter-spacing: .5px;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #1a2235;
+    transition: background .15s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface2); }
+
+  td {
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .badge-green { background: #22c55e22; color: var(--green); }
+  .badge-blue { background: #1e6fff22; color: var(--blue2); }
+  .badge-gold { background: #c9a22722; color: var(--gold2); }
+  .badge-red { background: #e53e5a22; color: var(--red); }
+
+  /* FORM */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 28px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 8px; }
+
+  label { font-size: 13px; font-weight: 700; color: var(--muted); }
+
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px #c9a22722;
+  }
+
+  select option { background: var(--surface); }
+
+  /* BUTTONS */
+  .btn {
+    font-family: 'Tajawal', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all .2s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold2));
+    color: #0a0e1a;
+  }
+
+  .btn-gold:hover { opacity: .9; transform: translateY(-1px); box-shadow: 0 4px 20px #c9a22744; }
+
+  .btn-blue {
+    background: linear-gradient(135deg, var(--blue), var(--blue2));
+    color: white;
+  }
+
+  .btn-blue:hover { opacity: .9; transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { color: var(--text); }
+
+  .btn-red {
+    background: #e53e5a22;
+    color: var(--red);
+    border: 1px solid #e53e5a33;
+  }
+
+  .btn-red:hover { background: #e53e5a44; }
+
+  /* PARTNER CARDS */
+  .partners-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .partner-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+  }
+
+  .partner-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px #00000044;
+  }
+
+  .partner-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--blue2));
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+
+  .partner-avatar {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 900;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, var(--surface2), var(--border));
+    border: 2px solid var(--border);
+  }
+
+  .partner-name { font-size: 17px; font-weight: 800; margin-bottom: 4px; }
+  .partner-role { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+
+  .partner-stats { display: flex; flex-direction: column; gap: 10px; }
+
+  .partner-stat {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .partner-stat-label { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .partner-stat-value { font-size: 14px; font-weight: 800; }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    transition: width .4s ease;
+  }
+
+  /* EMPTY STATE */
+  .empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--muted);
+  }
+
+  .empty svg { margin-bottom: 12px; opacity: .4; }
+  .empty p { font-size: 16px; font-weight: 600; }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--green);
+    box-shadow: 0 8px 32px #000000aa;
+    transition: transform .3s;
+    z-index: 9999;
+  }
+
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* CATEGORIES */
+  .cat-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+
+  .cat-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    transition: all .2s;
+  }
+
+  .cat-chip.active, .cat-chip:hover {
+    background: #c9a22722;
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    nav button span { display: none; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .partners-grid { grid-template-columns: 1fr; }
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- شاشة التحميل -->
+<div id="loading-screen" style="position:fixed;inset:0;z-index:99999;background:#0a0e1a;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
+  <div style="font-size:56px;animation:spin 2s linear infinite">📊</div>
+  <div style="font-size:24px;font-weight:900;color:var(--gold2);letter-spacing:1px">مشروع النهضة</div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+    <div style="width:220px;height:4px;background:var(--border);border-radius:4px;overflow:hidden">
+      <div id="loading-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:4px;transition:width .4s ease"></div>
+    </div>
+    <div id="loading-msg" style="font-size:14px;color:var(--muted);font-weight:600">جاري الاتصال بالخادم...</div>
+  </div>
+  <style>
+    @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    #loading-msg { animation: pulse 1.5s ease-in-out infinite; }
+  </style>
+</div>
+
+<header id="app-header" style="display:none">
+  <div>
+    <div class="logo">📊 مشروع النهضة</div>
+    <div id="today-date" style="font-size:12px;color:var(--muted);font-weight:600;margin-top:3px;text-align:right"></div>
+  </div>
+  <nav>
+    <button class="active" onclick="showPage('expenses')">💰 <span>المصروفات</span></button>
+    <button onclick="showPage('partners')">👥 <span>الشركاء</span></button>
+    <button onclick="showPage('jadwa')">📋 <span>دراسة جدوى</span></button>
+    <button onclick="showPage('summary')">📈 <span>الملخص</span></button>
+    <button id="undo-btn" onclick="undo()" style="color:var(--gold);border:1px solid #c9a22733;opacity:0.4" disabled title="لا يوجد إجراء للتراجع">↩️ <span>تراجع</span></button>
+    <button onclick="printReport()" style="color:#a78bfa;border:1px solid #7c3aed44;font-weight:800">🖨️ <span>طباعة PDF</span></button>
+    <button onclick="document.getElementById('import-input').click()" style="color:var(--blue2);border:1px solid #1e6fff33;font-weight:800">📥 <span>استيراد</span></button>
+    <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">
+    <button onclick="closeApp()" style="color:#fff;background:#e53e5a;border:1px solid #e53e5a;font-weight:800">✕ <span>إغلاق</span></button>
+  </nav>
+</header>
+
+<main id="app-main" style="display:none">
+
+  <!-- ═══ صفحة المصاريف ═══ -->
+  <div class="page active" id="page-expenses">
+    <div class="stats-grid" id="expense-stats"></div>
+
+    <div class="form-card">
+      <div class="section-title" style="margin-bottom:20px"><span class="dot"></span> إضافة مصروف جديد</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>اسم المصروف</label>
+          <input id="exp-name" type="text" placeholder="مثال: إيجار المكتب">
+        </div>
+        <div class="form-group">
+          <label>المبلغ (ريال)</label>
+          <input id="exp-amount" type="number" placeholder="0.00" min="0">
+        </div>
+        <div class="form-group">
+          <label>التصنيف</label>
+          <select id="exp-cat">
+            <option value="عظم">عظم</option>
+            <option value="كهرباء">كهرباء</option>
+            <option value="سباكة">سباكة</option>
+            <option value="بلاط">بلاط</option>
+            <option value="بوية">بوية</option>
+            <option value="جبس">جبس</option>
+            <option value="ابواب">ابواب</option>
+            <option value="شبابيك">شبابيك</option>
+            <option value="مبسط">مبسط</option>
+            <option value="مكتب هندسي">مكتب هندسي</option>
+            <option value="شركة المياه">شركة المياه</option>
+            <option value="شركة الكهرباء">شركة الكهرباء</option>
+            <option value="بلدية">بلدية</option>
+            <option value="دفاع مدني">دفاع مدني</option>
+            <option value="تأمين">تأمين</option>
+            <option value="أخرى">أخرى</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>التاريخ</label>
+          <input id="exp-date" type="date">
+        </div>
+        <div class="form-group">
+          <label>ملاحظات</label>
+          <textarea id="exp-notes" placeholder="اختياري" rows="3" style="resize:vertical;min-height:70px"></textarea>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="addExpense()">➕ إضافة المصروف</button>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title"><span class="dot"></span> سجل المصاريف</div>
+    </div>
+
+    <div class="cat-chips" id="cat-filter">
+      <div class="cat-chip active" onclick="filterCat(this,'الكل')">الكل</div>
+      <div class="cat-chip" onclick="filterCat(this,'عظم')">عظم</div>
+      <div class="cat-chip" onclick="filterCat(this,'كهرباء')">كهرباء</div>
+      <div class="cat-chip" onclick="filterCat(this,'سباكة')">سباكة</div>
+      <div class="cat-chip" onclick="filterCat(this,'بلاط')">بلاط</div>
+      <div class="cat-chip" onclick="filterCat(this,'بوية')">بوية</div>
+      <div class="cat-chip" onclick="filterCat(this,'جبس')">جبس</div>
+      <div class="cat-chip" onclick="filterCat(this,'ابواب')">ابواب</div>
+      <div class="cat-chip" onclick="filterCat(this,'شبابيك')">شبابيك</div>
+      <div class="cat-chip" onclick="filterCat(this,'مبسط')">مبسط</div>
+      <div class="cat-chip" onclick="filterCat(this,'مكتب هندسي')">مكتب هندسي</div>
+      <div class="cat-chip" onclick="filterCat(this,'شركة المياه')">شركة المياه</div>
+      <div class="cat-chip" onclick="filterCat(this,'شركة الكهرباء')">شركة الكهرباء</div>
+      <div class="cat-chip" onclick="filterCat(this,'بلدية')">بلدية</div>
+      <div class="cat-chip" onclick="filterCat(this,'دفاع مدني')">دفاع مدني</div>
+      <div class="cat-chip" onclick="filterCat(this,'تأمين')">تأمين</div>
+      <div class="cat-chip" onclick="filterCat(this,'أخرى')">أخرى</div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>البيان</th>
+            <th>التصنيف</th>
+            <th>المبلغ</th>
+            <th>التاريخ</th>
+            <th>ملاحظات</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="expense-table"></tbody>
+      </table>
+      <div class="empty" id="expense-empty" style="display:none">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 14l2 2 4-4"/><path d="M21 8V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h7"/><path d="M16 19h6m-3-3v6"/></svg>
+        <p>لا توجد مصاريف مسجلة بعد</p>
+      </div>
+    </div>
+
+    <!-- رسم بياني للمصاريف -->
+    <div id="exp-chart-section" style="display:none; margin-top:32px;">
+      <div class="section-title" style="margin-bottom:20px"><span class="dot"></span> الرسم البياني للمصاريف</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start">
+
+        <!-- دائري -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;">
+          <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:18px;">توزيع حسب التصنيف</div>
+          <div style="display:flex;justify-content:center;">
+            <canvas id="exp-donut" width="240" height="240"></canvas>
+          </div>
+          <div id="exp-donut-legend" style="margin-top:18px;display:flex;flex-direction:column;gap:10px;"></div>
+        </div>
+
+        <!-- أعمدة -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;">
+          <div style="font-size:13px;font-weight:700;color:var(--muted);margin-bottom:18px;">مقارنة المبالغ بالتصنيف</div>
+          <div id="exp-bars" style="display:flex;flex-direction:column;gap:14px;"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ صفحة الشركاء ═══ -->
+  <div class="page" id="page-partners">
+    <div class="form-card">
+      <div class="section-title" style="margin-bottom:20px"><span class="dot"></span> إضافة شريك جديد</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>اسم الشريك</label>
+          <input id="par-name" type="text" placeholder="مثال: أحمد محمد">
+        </div>
+        <div class="form-group">
+          <label>تاريخ استلام المبلغ</label>
+          <input id="par-date" type="date">
+        </div>
+        <div class="form-group">
+          <label>رأس المال المستثمر (ريال)</label>
+          <input id="par-capital" type="text" placeholder="0" oninput="formatCapitalInput(this)">
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="addPartner()">➕ إضافة الشريك</button>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title"><span class="dot"></span> الشركاء في المشروع</div>
+      <div id="total-pct-badge"></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th>
+          <th>الشريك</th>
+          <th>تاريخ الاستلام</th>
+          <th>الحصة</th>
+          <th>النسبة</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="partners-grid"></tbody>
+      </table>
+      <div class="empty" id="partners-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <p>لم يتم إضافة أي شريك بعد</p>
+      </div>
+    </div>
+
+    <div id="chart-section" style="display:none; margin-top:36px">
+      <div class="section-title" style="margin-bottom:20px"><span class="dot"></span> الرسم البياني للحصص</div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; align-items:center">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;display:flex;justify-content:center">
+          <canvas id="partners-chart" width="280" height="280"></canvas>
+        </div>
+        <div id="chart-legend" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-direction:column;gap:14px"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ صفحة دراسة جدوى ═══ -->
+  <div class="page" id="page-jadwa">
+
+    <!-- ── الأراضي ── -->
+    <div class="form-card" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+        <div class="section-title" style="color:var(--green)"><span class="dot" style="background:var(--green)"></span> الأراضي</div>
+        <div id="j-lands-total-badge"></div>
+      </div>
+
+      <!-- جدول الأراضي -->
+      <div class="table-wrap" style="margin-bottom:16px">
+        <table>
+          <thead><tr>
+            <th>#</th><th>اسم / وصف الأرض</th><th>المساحة (م²)</th>
+            <th>سعر المتر</th>
+            <th>قيمة الأرض</th><th>الضريبة % / ريال</th><th>السعي % / ريال</th>
+            <th>الإجمالي</th><th>نسبة من الكل</th><th></th>
+          </tr></thead>
+          <tbody id="j-lands-body"></tbody>
+          <tfoot id="j-lands-foot"></tfoot>
+        </table>
+        <div class="empty" id="j-lands-empty">
+          <p>لم تتم إضافة أي أرض بعد</p>
+        </div>
+      </div>
+
+      <!-- إضافة أرض -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;align-items:flex-end">
+        <div class="form-group"><label>اسم / وصف الأرض</label>
+          <input id="jl-name" type="text" placeholder="مثال: قطعة 1"></div>
+        <div class="form-group"><label>المساحة (م²)</label>
+          <input id="jl-area" type="text" placeholder="0" oninput="formatCapitalInput(this)"></div>
+        <div class="form-group"><label>سعر المتر (ريال)</label>
+          <input id="jl-price" type="text" placeholder="0" oninput="formatCapitalInput(this)"></div>
+        <div class="form-group"><label>الضريبة %</label>
+          <input id="jl-tax" type="number" placeholder="5" value="5" min="0" step="0.1"></div>
+        <div class="form-group"><label>السعي %</label>
+          <input id="jl-comm" type="number" placeholder="2.5" value="2.5" min="0" step="0.1"></div>
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn btn-gold" onclick="addLand()" style="width:100%">➕ إضافة أرض</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── البناء — المشاريع ── -->
+    <div class="form-card" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+        <div class="section-title" style="color:var(--blue2)"><span class="dot" style="background:var(--blue2)"></span> البناء — المشاريع</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div id="j-build-total-badge"></div>
+          <select id="jproj-land" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:Tajawal,sans-serif;padding:8px 14px;font-size:14px;min-width:200px">
+            <option value="">— اختر أرضاً —</option>
+          </select>
+          <button class="btn btn-gold" onclick="addProject()">➕ إضافة مشروع</button>
+        </div>
+      </div>
+      <div id="j-projects-container"></div>
+      <div class="empty" id="j-projects-empty"><p>أضف مشروعاً لبدء حساب تكاليف البناء</p></div>
+    </div>
+
+    <!-- ── الشركاء ── -->
+    <div class="form-card" style="margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:12px">
+        <div class="section-title" style="color:var(--gold);margin-bottom:0"><span class="dot"></span> الشركاء — توزيع الأسهم والأرباح</div>
+      </div>
+
+      <div class="table-wrap" style="margin-bottom:14px">
+        <table>
+          <thead><tr>
+            <th>الاسم</th>
+            <th>الحصة (ريال)</th>
+            <th>نسبة الملكية</th>
+            <th>نصيبه من التكاليف<br><span style="font-size:10px;font-weight:400;color:var(--muted)">(أرض + بناء)</span></th>
+            <th>فائض / عجز</th>
+            <th>نصيبه من البيع</th>
+            <th>المجموع النهائي</th>
+          </tr></thead>
+          <tbody id="j-partners-body"></tbody>
+          <tfoot id="j-partners-foot"></tfoot>
+        </table>
+        <div class="empty" id="j-partners-empty"><p>أضف شركاء من صفحة الشركاء أولاً</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ صفحة الملخص ═══ -->
+  <div class="page" id="page-summary">
+
+    <!-- ملخص مالي دراسة الجدوى -->
+    <div class="form-card" style="margin-bottom:20px;display:flex;flex-direction:column;gap:16px">
+      <div class="section-title" style="margin-bottom:0"><span class="dot"></span> الملخص المالي</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" id="j-top-boxes"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <!-- خانة قيمة البيع ثابتة في HTML -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px">
+          <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:10px">قيمة البيع الإجمالية</div>
+          <input id="j-sell-price" type="text" placeholder="0"
+            oninput="formatCapitalInput(this);calcJadwa();"
+            style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:Tajawal,sans-serif;padding:10px 14px;font-size:18px;font-weight:900;text-align:center;box-sizing:border-box">
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center">ريال</div>
+        </div>
+        <!-- نتيجة الربح/الخسارة ديناميكية -->
+        <div id="j-bottom-boxes"></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="stats-grid" id="summary-stats"></div>
+    <hr class="divider">
+
+    <div class="section-title" style="margin-bottom:20px"><span class="dot"></span> توزيع المصاريف حسب التصنيف</div>
+    <div class="table-wrap" style="margin-bottom:32px">
+      <table>
+        <thead><tr><th>التصنيف</th><th>المبلغ الإجمالي</th><th>عدد البنود</th><th>النسبة</th></tr></thead>
+        <tbody id="cat-breakdown"></tbody>
+      </table>
+    </div>
+
+    <div class="section-title" style="margin-bottom:20px"><span class="dot"></span> الشركاء — توزيع الأسهم والأرباح</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>الاسم</th>
+          <th>الحصة (ريال)</th>
+          <th>النسبة % من البيع</th>
+          <th>الربح / العجز</th>
+          <th>المجموع</th>
+        </tr></thead>
+        <tbody id="summary-partners-body"></tbody>
+        <tfoot id="summary-partners-foot"></tfoot>
+      </table>
+      <div class="empty" id="summary-partners-empty" style="display:none">
+        <p>أضف شركاء وأدخل سعر البيع في دراسة الجدوى</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Confirm Modal -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:#00000099;backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:90%;max-width:400px;box-shadow:0 24px 64px #000000cc;text-align:center">
+    <div style="font-size:40px;margin-bottom:16px" id="confirm-icon">🗑️</div>
+    <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:8px" id="confirm-title">تأكيد</div>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:28px" id="confirm-msg"></div>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <button class="btn btn-red" id="confirm-ok" style="min-width:100px;font-size:15px">تأكيد</button>
+      <button class="btn" onclick="closeConfirm()" style="min-width:100px;font-size:15px;background:var(--surface2);border:1px solid var(--border)">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Partner Edit Modal -->
+<div id="partner-edit-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:#00000088;backdrop-filter:blur(4px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeEditPartner()">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:90%;max-width:480px;box-shadow:0 24px 64px #000000aa;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <div class="section-title"><span class="dot"></span> تعديل الشريك</div>
+      <button onclick="closeEditPartner()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>اسم الشريك</label>
+        <input id="ep-name" type="text">
+      </div>
+      <div class="form-group">
+        <label>تاريخ استلام المبلغ</label>
+        <input id="ep-date" type="date">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>رأس المال (ريال)</label>
+        <input id="ep-capital" type="text" oninput="formatCapitalInput(this)">
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:24px">
+      <button class="btn btn-gold" onclick="saveEditPartner()" style="flex:1">💾 حفظ التعديلات</button>
+      <button class="btn" onclick="closeEditPartner()" style="flex:1;background:var(--surface2);border:1px solid var(--border)">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div id="edit-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:#00000088;backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;width:90%;max-width:560px;box-shadow:0 24px 64px #000000aa;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+      <div class="section-title"><span class="dot"></span> تعديل المصروف</div>
+      <button onclick="closeEditModal()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>اسم المصروف</label>
+        <input id="edit-name" type="text">
+      </div>
+      <div class="form-group">
+        <label>المبلغ (ريال)</label>
+        <input id="edit-amount" type="number" min="0">
+      </div>
+      <div class="form-group">
+        <label>التصنيف</label>
+        <select id="edit-cat">
+          <option value="عظم">عظم</option>
+          <option value="كهرباء">كهرباء</option>
+          <option value="سباكة">سباكة</option>
+          <option value="بلاط">بلاط</option>
+          <option value="بوية">بوية</option>
+          <option value="جبس">جبس</option>
+          <option value="ابواب">ابواب</option>
+          <option value="شبابيك">شبابيك</option>
+          <option value="مبسط">مبسط</option>
+          <option value="مكتب هندسي">مكتب هندسي</option>
+          <option value="شركة المياه">شركة المياه</option>
+          <option value="شركة الكهرباء">شركة الكهرباء</option>
+          <option value="بلدية">بلدية</option>
+          <option value="دفاع مدني">دفاع مدني</option>
+          <option value="تأمين">تأمين</option>
+          <option value="أخرى">أخرى</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>التاريخ</label>
+        <input id="edit-date" type="date">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <label>ملاحظات</label>
+        <input id="edit-notes" type="text" placeholder="اختياري">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-gold" onclick="saveEdit()" style="flex:1">💾 حفظ التعديل</button>
+      <button class="btn btn-ghost" onclick="closeEditModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let expenses = JSON.parse(localStorage.getItem('exp') || '[]');
+let partners = JSON.parse(localStorage.getItem('par') || '[]');
+let plan     = JSON.parse(localStorage.getItem('plan') || '[]');
+let activeCat = 'الكل';
+let pctChart = null;
+
+// set today's date
+document.getElementById('exp-date').valueAsDate = new Date();
+document.getElementById('par-date').valueAsDate = new Date();
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('ar-SA', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+const COLORS = ['#c9a227','#1e6fff','#22c55e','#e53e5a','#a855f7','#f97316'];
+const BADGES = {
+  'عظم':'badge-gold','كهرباء':'badge-blue','سباكة':'badge-green','بلاط':'badge-red',
+  'بوية':'badge-blue','جبس':'badge-gold','ابواب':'badge-green','شبابيك':'badge-blue',
+  'مبسط':'badge-red','بلدية':'badge-green','دفاع مدني':'badge-red','تأمين':'badge-gold',
+  'أخرى':'badge-gold'
+};
+
+// ─── SAVE ─────────────────────────────────────────────────
+// ─── PRINT PDF ────────────────────────────────────────────
+function printReport() {
+  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+  const totalCapital  = partners.reduce((s, p) => s + p.capital, 0);
+  const balance       = totalCapital - totalExpenses;
+  const fmt = v => (v||0).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+
+  // category breakdown
+  const cats = {};
+  expenses.forEach(e => {
+    if (!cats[e.cat]) cats[e.cat] = 0;
+    cats[e.cat] += e.amount;
+  });
+
+  // jadwa numbers
+  const landTotal  = jadwaLands.reduce((s, l) => { const b=l.area*l.price; return s+b+b*l.tax/100+b*l.comm/100; }, 0);
+  const buildTotal = jadwaProjects.reduce((s, proj) =>
+    s + proj.floors.reduce((fs, f) => fs + proj.baseArea*(f.pct/100)*(f.customCost||0), 0), 0);
+  const totalCost  = landTotal + buildTotal;
+  const sellPrice  = parseFloat((document.getElementById('j-sell-price')?.value||'0').replace(/,/g,''))||0;
+  const netResult  = sellPrice > 0 ? sellPrice - totalCost : totalCapital - totalCost;
+  const isProfit   = netResult >= 0;
+
+  const now = new Date().toLocaleDateString('ar-SA', {year:'numeric',month:'long',day:'numeric'});
+
+  const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>تقرير مشروع النهضة</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Tajawal',sans-serif; background:#fff; color:#111; direction:rtl; padding:30px; font-size:13px; }
+  h1 { font-size:26px; font-weight:900; color:#1a1a2e; border-bottom:3px solid #c9a227; padding-bottom:10px; margin-bottom:6px; }
+  .meta { color:#666; font-size:12px; margin-bottom:24px; }
+  h2 { font-size:16px; font-weight:800; color:#1e3a5f; margin:24px 0 10px; border-right:4px solid #c9a227; padding-right:10px; }
+  table { width:100%; border-collapse:collapse; margin-bottom:6px; font-size:12px; }
+  th { background:#1e3a5f; color:#fff; padding:8px 10px; text-align:right; font-weight:700; }
+  td { padding:7px 10px; border-bottom:1px solid #e5e7eb; }
+  tr:nth-child(even) td { background:#f9fafb; }
+  tfoot td { background:#1e3a5f22; font-weight:800; color:#1e3a5f; border-top:2px solid #1e3a5f; }
+  .boxes { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:20px; }
+  .box { border:1px solid #e5e7eb; border-radius:10px; padding:14px; text-align:center; }
+  .box .label { font-size:11px; color:#666; margin-bottom:6px; font-weight:700; }
+  .box .val { font-size:18px; font-weight:900; }
+  .gold { color:#b7880f; }
+  .blue { color:#1e4fff; }
+  .green { color:#16a34a; }
+  .red { color:#dc2626; }
+  .result-box { border-radius:10px; padding:18px; text-align:center; margin-top:16px; border:2px solid; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:700; background:#f0f0f0; }
+  @media print {
+    body { padding:15px; }
+    @page { margin:15mm; size:A4; }
+  }
+</style>
+</head>
+<body>
+
+<h1>📊 تقرير مشروع النهضة</h1>
+<div class="meta">تاريخ التقرير: ${now} &nbsp;|&nbsp; إجمالي البنود: ${expenses.length} مصروف &nbsp;|&nbsp; عدد الشركاء: ${partners.length}</div>
+
+<!-- ملخص مالي -->
+<h2>الملخص المالي</h2>
+<div class="boxes">
+  <div class="box"><div class="label">الميزانية</div><div class="val gold">${fmt(totalCapital)}</div><div class="label" style="margin-top:4px">ريال</div></div>
+  <div class="box"><div class="label">إجمالي المصروفات</div><div class="val blue">${fmt(totalExpenses)}</div><div class="label" style="margin-top:4px">ريال</div></div>
+  <div class="box"><div class="label">الرصيد</div><div class="val ${balance>=0?'green':'red'}">${fmt(balance)}</div><div class="label" style="margin-top:4px">ريال</div></div>
+</div>
+
+${totalCost > 0 ? `
+<div class="boxes">
+  <div class="box"><div class="label">تكلفة الأراضي</div><div class="val blue">${fmt(landTotal)}</div></div>
+  <div class="box"><div class="label">تكلفة البناء</div><div class="val blue">${fmt(buildTotal)}</div></div>
+  <div class="box"><div class="label">إجمالي التكاليف</div><div class="val blue">${fmt(totalCost)}</div></div>
+</div>
+${sellPrice > 0 ? `<div class="result-box" style="background:${isProfit?'#f0fdf4':'#fef2f2'};border-color:${isProfit?'#16a34a':'#dc2626'}">
+  <div style="font-size:14px;font-weight:800;color:${isProfit?'#15803d':'#b91c1c'};margin-bottom:6px">${isProfit?'✅ ربح':'❌ عجز'}</div>
+  <div style="font-size:24px;font-weight:900;color:${isProfit?'#15803d':'#b91c1c'}">${netResult>=0?'+':''}${fmt(netResult)} ريال</div>
+  <div style="font-size:12px;color:#666;margin-top:4px">سعر البيع: ${fmt(sellPrice)} ريال</div>
+</div>` : ''}` : ''}
+
+<!-- الشركاء -->
+<h2>الشركاء — توزيع الأسهم</h2>
+
+${partners.length > 0 ? `
+<div style="margin-bottom:20px">
+  <!-- رسم بياني أعمدة -->
+  ${(() => {
+    const colors = ['#c9a227','#1e6fff','#22c55e','#a855f7','#f97316','#e53e5a','#06b6d4','#84cc16'];
+    const total  = partners.reduce((s,p)=>s+p.capital,0);
+    const maxCap = Math.max(...partners.map(p=>p.capital));
+    const barW   = 54, gap = 18, padL = 20, padB = 60, chartH = 180;
+    const svgW   = partners.length * (barW + gap) + padL + 20;
+    let bars = '';
+    partners.forEach((p,i) => {
+      const color  = p.color || colors[i%colors.length];
+      const pct    = total>0?(p.capital/total*100):0;
+      const barH   = maxCap>0 ? (p.capital/maxCap)*(chartH-20) : 0;
+      const x      = padL + i*(barW+gap);
+      const y      = chartH - barH;
+      // عمود
+      bars += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="6" fill="${color}"/>`;
+      // نسبة فوق العمود
+      bars += `<text x="${x+barW/2}" y="${y-7}" text-anchor="middle" font-size="12" font-weight="900" fill="${color}" font-family="Tajawal,sans-serif">${pct.toFixed(1)}%</text>`;
+      // اسم الشريك تحت العمود
+      const name = p.name.length > 7 ? p.name.slice(0,7)+'…' : p.name;
+      bars += `<text x="${x+barW/2}" y="${chartH+16}" text-anchor="middle" font-size="11" font-weight="700" fill="#333" font-family="Tajawal,sans-serif">${name}</text>`;
+      // المبلغ تحت الاسم
+      const capStr = (p.capital/1000000).toFixed(2)+'M';
+      bars += `<text x="${x+barW/2}" y="${chartH+32}" text-anchor="middle" font-size="10" fill="#888" font-family="Tajawal,sans-serif">${capStr}</text>`;
+    });
+    return `<svg width="${svgW}" height="${chartH+padB}" xmlns="http://www.w3.org/2000/svg">
+      <!-- خط القاعدة -->
+      <line x1="${padL}" y1="${chartH}" x2="${svgW-10}" y2="${chartH}" stroke="#e5e7eb" stroke-width="1.5"/>
+      ${bars}
+    </svg>`;
+  })()}
+</div>` : ''}
+
+<table>
+  <thead><tr><th>#</th><th>اسم الشريك</th><th>تاريخ الاستلام</th><th>رأس المال (ريال)</th><th>النسبة %</th>${sellPrice>0?'<th>نصيبه من التكاليف</th><th>فائض / عجز</th>':''}</tr></thead>
+  <tbody>
+  ${partners.map((p,i) => {
+    const pct = totalCapital>0?(p.capital/totalCapital*100).toFixed(2):0;
+    const costShare = totalCapital>0?(p.capital/totalCapital)*totalCost:0;
+    const surplus   = p.capital - costShare;
+    return `<tr>
+      <td>${i+1}</td>
+      <td style="font-weight:700">${p.name}</td>
+      <td>${p.date||'—'}</td>
+      <td style="font-weight:800">${fmt(p.capital)}</td>
+      <td>${pct}%</td>
+      ${sellPrice>0?`<td>${fmt(costShare)}</td><td style="color:${surplus>=0?'#16a34a':'#dc2626'};font-weight:800">${surplus>=0?'+':''}${fmt(surplus)}</td>`:''}
+    </tr>`;
+  }).join('')}
+  </tbody>
+  <tfoot><tr>
+    <td colspan="3">الإجمالي</td>
+    <td>${fmt(totalCapital)}</td>
+    <td>100%</td>
+    ${sellPrice>0?`<td>${fmt(totalCost)}</td><td style="color:${isProfit?'#16a34a':'#dc2626'};font-weight:800">${isProfit?'+':''}${fmt(netResult)}</td>`:''}
+  </tr></tfoot>
+</table>
+
+<!-- توزيع المصاريف بالتصنيف -->
+<h2>توزيع المصاريف حسب التصنيف</h2>
+<table>
+  <thead><tr><th>التصنيف</th><th>المبلغ (ريال)</th><th>عدد البنود</th><th>النسبة %</th></tr></thead>
+  <tbody>
+  ${Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat, amt]) => {
+    const count = expenses.filter(e=>e.cat===cat).length;
+    const pct   = totalExpenses>0?(amt/totalExpenses*100).toFixed(1):0;
+    return `<tr><td><span class="badge">${cat}</span></td><td style="font-weight:700">${fmt(amt)}</td><td>${count}</td><td>${pct}%</td></tr>`;
+  }).join('')}
+  </tbody>
+  <tfoot><tr><td>الإجمالي</td><td>${fmt(totalExpenses)}</td><td>${expenses.length}</td><td>100%</td></tr></tfoot>
+</table>
+
+<!-- سجل المصاريف الكامل -->
+<h2>سجل المصاريف التفصيلي (${expenses.length} بند)</h2>
+<table>
+  <thead><tr><th>#</th><th>البيان</th><th>التصنيف</th><th>المبلغ (ريال)</th><th>التاريخ</th><th>ملاحظات</th></tr></thead>
+  <tbody>
+  ${[...expenses].sort((a,b)=>new Date(b.date)-new Date(a.date)).map((e,i)=>`
+    <tr>
+      <td>${i+1}</td>
+      <td style="font-weight:700">${e.name}</td>
+      <td><span class="badge">${e.cat}</span></td>
+      <td style="font-weight:800">${fmt(e.amount)}</td>
+      <td>${e.date||'—'}</td>
+      <td style="color:#666">${e.notes||'—'}</td>
+    </tr>`).join('')}
+  </tbody>
+  <tfoot><tr><td colspan="3">الإجمالي</td><td style="font-weight:900">${fmt(totalExpenses)}</td><td colspan="2"></td></tr></tfoot>
+</table>
+
+${jadwaLands.length>0?`
+<h2>الأراضي</h2>
+<table>
+  <thead><tr><th>#</th><th>الاسم</th><th>المساحة (م²)</th><th>سعر المتر</th><th>قيمة الأرض</th><th>الضريبة</th><th>السعي</th><th>الإجمالي</th></tr></thead>
+  <tbody>
+  ${jadwaLands.map((l,i)=>{
+    const base=l.area*l.price, taxA=base*l.tax/100, commA=base*l.comm/100, tot=base+taxA+commA;
+    return `<tr>
+      <td>${i+1}</td><td style="font-weight:700">${l.name}</td>
+      <td>${fmt(l.area)}</td><td>${fmt(l.price)}</td><td>${fmt(base)}</td>
+      <td>${fmt(taxA)} (${l.tax}%)</td><td>${fmt(commA)} (${l.comm}%)</td>
+      <td style="font-weight:800">${fmt(tot)}</td>
+    </tr>`;
+  }).join('')}
+  </tbody>
+  <tfoot><tr><td colspan="7">الإجمالي</td><td style="font-weight:900">${fmt(landTotal)}</td></tr></tfoot>
+</table>`:''}
+
+${jadwaProjects.length>0?`
+<h2>مشاريع البناء والأدوار</h2>
+${jadwaProjects.map(proj=>{
+  const projCost = proj.floors.reduce((s,f)=>s+proj.baseArea*(f.pct/100)*(f.customCost||0),0);
+  return `<div style="margin-bottom:16px">
+    <div style="font-weight:800;color:#1e3a5f;margin-bottom:6px;font-size:14px">${proj.name} — مساحة الأرض: ${fmt(proj.baseArea)} م² — تكلفة البناء: ${fmt(projCost)} ريال</div>
+    <table>
+      <thead><tr><th>الدور</th><th>النسبة %</th><th>المسطح (م²)</th><th>تكلفة/م²</th><th>الإجمالي</th></tr></thead>
+      <tbody>
+      ${proj.floors.map(f=>{
+        const area=proj.baseArea*(f.pct/100), tot=area*(f.customCost||0);
+        return `<tr><td style="font-weight:700">${f.name}</td><td>${f.pct}%</td><td>${(area).toFixed(1)}</td><td>${fmt(f.customCost||0)}</td><td style="font-weight:800">${fmt(tot)}</td></tr>`;
+      }).join('')}
+      </tbody>
+      <tfoot><tr><td colspan="4">إجمالي</td><td style="font-weight:900">${fmt(projCost)}</td></tr></tfoot>
+    </table>
+  </div>`;
+}).join('')}`:''}
+
+<div style="text-align:center;margin-top:40px;color:#aaa;font-size:11px;border-top:1px solid #eee;padding-top:14px">
+  تم توليد هذا التقرير تلقائياً من نظام إدارة مشروع النهضة — ${now}
+</div>
+
+<script>window.onload = () => window.print();<\/script>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+}
+
+let undoStack = [];
+const MAX_UNDO = 20;
+
+function snapshot() {
+  const sellPrice = document.getElementById('j-sell-price')?.value || '0';
+  undoStack.push({
+    expenses:     JSON.parse(JSON.stringify(expenses)),
+    partners:     JSON.parse(JSON.stringify(partners)),
+    jadwaLands:   JSON.parse(JSON.stringify(jadwaLands)),
+    jadwaProjects:JSON.parse(JSON.stringify(jadwaProjects)),
+    sellPrice
+  });
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+  updateUndoBtn();
+}
+
+function undo() {
+  if (undoStack.length === 0) { toast('⚠️ لا يوجد إجراء للتراجع عنه', '#e53e5a'); return; }
+  const prev = undoStack.pop();
+  expenses      = prev.expenses;
+  partners      = prev.partners;
+  jadwaLands    = prev.jadwaLands;
+  jadwaProjects = prev.jadwaProjects;
+  save();
+  localStorage.setItem('jLands',    JSON.stringify(jadwaLands));
+  localStorage.setItem('jProjects', JSON.stringify(jadwaProjects));
+  const sp = document.getElementById('j-sell-price');
+  if (sp) sp.value = prev.sellPrice;
+  calcPcts(); renderAll();
+  updateUndoBtn();
+  toast('↩️ تم التراجع');
+}
+
+function updateUndoBtn() {
+  const btn = document.getElementById('undo-btn');
+  if (!btn) return;
+  btn.disabled = undoStack.length === 0;
+  btn.style.opacity = undoStack.length === 0 ? '0.4' : '1';
+  btn.title = undoStack.length > 0 ? `تراجع (${undoStack.length})` : 'لا يوجد إجراء للتراجع';
+}
+
+function save() {
+  localStorage.setItem('exp', JSON.stringify(expenses));
+  localStorage.setItem('par', JSON.stringify(partners));
+  saveToFirestore();
+}
+
+// stub — تُستبدل بعد تحميل Firebase
+function saveToFirestore() {}
+
+// ─── PAGES ────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  const pageEl = document.getElementById('page-' + id);
+  if (pageEl) pageEl.classList.add('active');
+  const idx = ['expenses','partners','jadwa','summary'].indexOf(id);
+  const btnEl = document.querySelectorAll('nav button')[idx];
+  if (btnEl) btnEl.classList.add('active');
+  renderAll();
+}
+
+// ─── EXPENSES ─────────────────────────────────────────────
+function addExpense() {
+  const name   = document.getElementById('exp-name').value.trim();
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const cat    = document.getElementById('exp-cat').value;
+  const date   = document.getElementById('exp-date').value;
+  const paidBy = '';
+  const notes  = document.getElementById('exp-notes').value.trim();
+
+  if (!name || isNaN(amount) || amount <= 0) {
+    toast('⚠️ يرجى إدخال الاسم والمبلغ', '#e53e5a'); return;
+  }
+
+  snapshot();
+  expenses.push({ id: Date.now(), name, amount, cat, date, paidBy, notes });
+  save(); renderAll();
+  document.getElementById('exp-name').value = '';
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-notes').value = '';
+  toast('✅ تم إضافة المصروف بنجاح');
+}
+
+function closeApp() {
+  confirmAction('💾', 'إغلاق التطبيق', 'سيتم حفظ نسخة احتياطية تلقائياً وإغلاق التطبيق.', 'حفظ وإغلاق', '#22c55e', () => {
+    save();
+    saveToFirestore();
+    const sellPrice = document.getElementById('j-sell-price')?.value || '0';
+    const now   = new Date();
+    const stamp = now.toLocaleDateString('en-CA') + '_' + now.toTimeString().slice(0,8).replace(/:/g,'-');
+    const data  = JSON.stringify({
+      version: '2.0', exportedAt: now.toISOString(),
+      expenses, partners, plan, jadwaLands, jadwaProjects, sellPrice
+    }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `نسخة-احتياطية-${stamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setTimeout(() => window.close(), 600);
+  });
+}
+function confirmDelete(msg, onConfirm) {
+  document.getElementById('confirm-icon').textContent  = '🗑️';
+  document.getElementById('confirm-title').textContent = 'تأكيد الحذف';
+  document.getElementById('confirm-msg').textContent   = msg;
+  const btn = document.getElementById('confirm-ok');
+  btn.textContent = 'حذف'; btn.style.background = '#e53e5a'; btn.style.borderColor = '#e53e5a';
+  document.getElementById('confirm-modal').style.display = 'flex';
+  btn.onclick = () => { closeConfirm(); onConfirm(); };
+}
+function confirmAction(icon, title, msg, btnLabel, btnColor, onConfirm) {
+  document.getElementById('confirm-icon').textContent  = icon;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent   = msg;
+  const btn = document.getElementById('confirm-ok');
+  btn.textContent = btnLabel; btn.style.background = btnColor; btn.style.borderColor = btnColor;
+  document.getElementById('confirm-modal').style.display = 'flex';
+  btn.onclick = () => { closeConfirm(); onConfirm(); };
+}
+function closeConfirm() {
+  document.getElementById('confirm-modal').style.display = 'none';
+}
+
+function deleteExpense(id) {
+  confirmDelete('سيتم حذف هذا المصروف نهائياً.', () => {
+    snapshot();
+    expenses = expenses.filter(e => e.id !== id);
+    save(); renderAll();
+    toast('🗑️ تم حذف المصروف', '#e53e5a');
+  });
+}
+
+function deletePartner(id) {
+  const p = partners.find(p => p.id === id);
+  confirmDelete(`سيتم حذف الشريك "${p?.name}" نهائياً وإعادة حساب النسب.`, () => {
+    snapshot();
+    partners = partners.filter(p => p.id !== id);
+    calcPcts(); save(); renderAll();
+    toast('🗑️ تم حذف الشريك', '#e53e5a');
+  });
+}
+function filterCat(el, cat) {
+  activeCat = cat;
+  document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderExpenseTable();
+}
+
+function renderExpenseTable() {
+  const tbody = document.getElementById('expense-table');
+  const filtered = activeCat === 'الكل' ? expenses : expenses.filter(e => e.cat === activeCat);
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = '';
+    document.getElementById('expense-empty').style.display = 'block';
+    return;
+  }
+  document.getElementById('expense-empty').style.display = 'none';
+
+  tbody.innerHTML = filtered.map((e, i) => `
+    <tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="font-weight:700">${e.name}</td>
+      <td><span class="badge ${BADGES[e.cat]||'badge-blue'}">${e.cat}</span></td>
+      <td style="color:var(--gold2);font-weight:800">${fmt(e.amount)}</td>
+      <td style="color:var(--muted)">${e.date || '—'}</td>
+      <td style="color:var(--muted);font-size:12px">${e.notes || '—'}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost" onclick="openEditModal(${e.id})" style="padding:6px 12px;font-size:12px">✏️ تعديل</button>
+        <button class="btn btn-red" onclick="deleteExpense(${e.id})" style="padding:6px 12px;font-size:12px">حذف</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderExpenseStats() {
+  const total = expenses.reduce((s, e) => s + e.amount, 0);
+
+  const totalCap     = partners.reduce((s, p) => s + p.capital, 0);
+  const remaining    = totalCap - total;
+
+  document.getElementById('expense-stats').innerHTML = `
+    <div class="stat-card gold">
+      <div class="stat-label">المصروفات</div>
+      <div class="stat-value">${fmt(total)}</div>
+    </div>
+    <div class="stat-card ${remaining >= 0 ? 'green' : 'red'}">
+      <div class="stat-label">المتبقي من الميزانية</div>
+      <div class="stat-value">${remaining >= 0 ? '' : '-'}${fmt(Math.abs(remaining))}</div>
+    </div>
+  `;
+}
+
+// ─── PARTNERS ─────────────────────────────────────────────
+function calcPcts() {
+  const total = partners.reduce((s, p) => s + p.capital, 0);
+  partners.forEach(p => { p.pct = total > 0 ? (p.capital / total) * 100 : 0; });
+}
+
+function addPartner() {
+  const name    = document.getElementById('par-name').value.trim();
+  const date    = document.getElementById('par-date').value;
+  const capital = parseFloat(document.getElementById('par-capital').value.replace(/,/g, ''));
+
+  if (!name || isNaN(capital) || capital <= 0) {
+    toast('⚠️ يرجى إدخال الاسم ورأس المال', '#e53e5a'); return;
+  }
+
+  snapshot();
+  partners.push({ id: Date.now(), name, date, pct: 0, capital, color: COLORS[partners.length % COLORS.length] });
+  calcPcts(); save(); renderAll();
+  document.getElementById('par-name').value = '';
+  document.getElementById('par-date').value = '';
+  document.getElementById('par-capital').value = '';
+  toast('✅ تم إضافة الشريك — تم إعادة حساب النسب');
+}
+
+
+let editingPartnerId = null;
+
+function openEditPartner(id) {
+  const p = partners.find(p => p.id === id);
+  if (!p) return;
+  editingPartnerId = id;
+  document.getElementById('ep-name').value    = p.name;
+  document.getElementById('ep-date').value    = p.date || '';
+  document.getElementById('ep-capital').value = p.capital.toLocaleString('en');
+  const modal = document.getElementById('partner-edit-modal');
+  modal.style.display = 'flex';
+}
+
+function closeEditPartner() {
+  document.getElementById('partner-edit-modal').style.display = 'none';
+  editingPartnerId = null;
+}
+
+function saveEditPartner() {
+  const p = partners.find(p => p.id === editingPartnerId);
+  if (!p) return;
+  const name    = document.getElementById('ep-name').value.trim();
+  const date    = document.getElementById('ep-date').value;
+  const capital = parseFloat(document.getElementById('ep-capital').value.replace(/,/g,''));
+  if (!name || isNaN(capital) || capital < 0) { toast('⚠️ تحقق من البيانات', '#e53e5a'); return; }
+  snapshot();
+  p.name    = name;
+  p.date    = date;
+  p.capital = capital;
+  calcPcts();
+  save(); renderAll();
+  closeEditPartner();
+  toast('✅ تم تعديل بيانات الشريك');
+}
+
+function renderPartners() {
+  const grid  = document.getElementById('partners-grid');
+  const empty = document.getElementById('partners-empty');
+  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+
+  const badge = document.getElementById('total-pct-badge');
+  if (partners.length > 0) {
+    const totalCap = partners.reduce((s, p) => s + p.capital, 0);
+    badge.innerHTML = `<span class="badge badge-gold">الميزانية: ${fmt(totalCap)}</span>`;
+  } else { badge.innerHTML = ''; }
+
+  if (partners.length === 0) {
+    grid.innerHTML = ''; empty.style.display = 'block';
+    const cs = document.getElementById('chart-section');
+    if (cs) cs.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+
+  const totalCap = partners.reduce((s, p) => s + p.capital, 0);
+
+  grid.innerHTML = partners.map((p, i) => {
+    const share   = totalExpenses * (p.pct / 100);
+    const balance = p.capital - share;
+    return `<tr>
+      <td style="color:var(--muted);font-weight:700">${i + 1}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="partner-avatar" style="color:${p.color};border-color:${p.color}33;width:32px;height:32px;font-size:14px;min-width:32px">${p.name[0]}</div>
+          <span style="font-weight:800">${p.name}</span>
+        </div>
+      </td>
+      <td style="color:var(--muted)">${p.date || '—'}</td>
+      <td style="color:var(--gold2);font-weight:700">${fmt(p.capital)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="progress-bar" style="width:60px">
+            <div class="progress-fill" style="width:${p.pct.toFixed(2)}%;background:${p.color}"></div>
+          </div>
+          <span style="font-weight:700;color:${p.color}">${p.pct.toFixed(2)}%</span>
+        </div>
+      </td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-gold" onclick="openEditPartner(${p.id})" style="padding:4px 10px;font-size:11px">✏️ تعديل</button>
+        <button class="btn btn-red" onclick="deletePartner(${p.id})" style="padding:4px 10px;font-size:11px">حذف</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // ── Draw donut chart ──
+  const chartSection = document.getElementById('chart-section');
+  if (!chartSection) return;
+  chartSection.style.display = 'block';
+  drawDonut();
+}
+
+let donutChart = null;
+
+function drawDonut() {
+  const canvas = document.getElementById('partners-chart');
+  const ctx = canvas.getContext('2d');
+  const cx = canvas.width / 2, cy = canvas.height / 2;
+  const R = 110, r = 64;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const total = partners.reduce((s, p) => s + p.capital, 0);
+  let startAngle = -Math.PI / 2;
+
+  partners.forEach((p, i) => {
+    const slice = (p.capital / total) * 2 * Math.PI;
+    const endAngle = startAngle + slice;
+
+    // slice
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = p.color;
+    ctx.fill();
+
+    // gap
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R + 2, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = '#0a0e1a';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#0a0e1a';
+    ctx.stroke();
+
+    startAngle = endAngle;
+  });
+
+  // inner hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.fillStyle = '#111827';
+  ctx.fill();
+
+  // center text
+  const totalCap = partners.reduce((s, p) => s + p.capital, 0);
+  ctx.fillStyle = '#f0c040';
+  ctx.font = 'bold 13px Tajawal, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('إجمالي', cx, cy - 10);
+  ctx.fillStyle = '#e8eaf0';
+  ctx.font = 'bold 11px Tajawal, sans-serif';
+  const formatted = totalCap.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  ctx.fillText(formatted, cx, cy + 8);
+  ctx.fillStyle = '#6b7a99';
+  ctx.font = '10px Tajawal, sans-serif';
+  ctx.fillText('ريال', cx, cy + 24);
+
+  // legend
+  const legend = document.getElementById('chart-legend');
+  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+  legend.innerHTML = partners.map(p => {
+    const share = totalExpenses * (p.pct / 100);
+    return `
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:14px;height:14px;border-radius:4px;background:${p.color};flex-shrink:0"></div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-weight:800;font-size:14px">${p.name}</span>
+          <span style="font-weight:900;font-size:15px;color:${p.color}">${p.pct.toFixed(2)}%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)">
+          <span>${p.capital.toLocaleString('en')} ريال</span>
+          <span>نصيب: ${share.toLocaleString('en-US',{maximumFractionDigits:0})} ريال</span>
+        </div>
+        <div class="progress-bar" style="margin-top:6px">
+          <div class="progress-fill" style="width:${p.pct.toFixed(2)}%;background:${p.color}"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+
+// ─── SUMMARY ──────────────────────────────────────────────
+function renderSummary() {
+  const total = expenses.reduce((s, e) => s + e.amount, 0);
+  const totalCapital = partners.reduce((s, p) => s + p.capital, 0);
+
+  document.getElementById('summary-stats').innerHTML = `
+    <div class="stat-card gold">
+      <div class="stat-label">إجمالي المصاريف</div>
+      <div class="stat-value">${fmt(total)}</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">الميزانية</div>
+      <div class="stat-value">${fmt(totalCapital)}</div>
+    </div>
+    <div class="stat-card ${totalCapital - total >= 0 ? 'green' : 'red'}">
+      <div class="stat-label">الرصيد الإجمالي</div>
+      <div class="stat-value">${fmt(totalCapital - total)}</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-label">عدد الشركاء</div>
+      <div class="stat-value">${partners.length}</div>
+    </div>
+  `;
+
+  // categories breakdown
+  const cats = {};
+  expenses.forEach(e => {
+    if (!cats[e.cat]) cats[e.cat] = { total: 0, count: 0 };
+    cats[e.cat].total += e.amount;
+    cats[e.cat].count++;
+  });
+
+  const catBody = document.getElementById('cat-breakdown');
+  if (Object.keys(cats).length === 0) {
+    catBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px">لا توجد بيانات</td></tr>`;
+  } else {
+    catBody.innerHTML = Object.entries(cats).sort((a,b)=>b[1].total-a[1].total).map(([cat, d]) => `
+      <tr>
+        <td><span class="badge ${BADGES[cat]||'badge-blue'}">${cat}</span></td>
+        <td style="color:var(--gold2);font-weight:800">${fmt(d.total)}</td>
+        <td style="color:var(--muted)">${d.count}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:${total>0?(d.total/total*100):0}%"></div></div>
+            <span style="font-weight:700;color:var(--gold)">${total>0?(d.total/total*100).toFixed(2):0}%</span>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // partners profit distribution
+  const spBody  = document.getElementById('summary-partners-body');
+  const spFoot  = document.getElementById('summary-partners-foot');
+  const spEmpty = document.getElementById('summary-partners-empty');
+
+  if (spBody) {
+    const sellPrice    = parseFloat((document.getElementById('j-sell-price')?.value||'0').replace(/,/g,'')) || 0;
+    const landTotal    = jadwaLands.reduce((s, l) => { const b = l.area*l.price; return s + b + b*l.tax/100 + b*l.comm/100; }, 0);
+    const buildTotal   = jadwaProjects.reduce((s, proj) => {
+      return s + proj.floors.reduce((fs, f) => fs + proj.baseArea*(f.pct/100)*(f.customCost||0), 0);
+    }, 0);
+    const totalCostAll = landTotal + buildTotal;
+    const netResult    = sellPrice > 0 ? sellPrice - totalCostAll : -totalCostAll;
+    const totalShares  = partners.reduce((s, p) => s + p.capital, 0);
+
+    if (partners.length === 0) {
+      spBody.innerHTML = ''; spFoot.innerHTML = '';
+      if (spEmpty) spEmpty.style.display = 'block';
+    } else {
+      if (spEmpty) spEmpty.style.display = 'none';
+      const n = (v) => (v||0).toLocaleString('en-US', {maximumFractionDigits:0});
+      let totShare=0, totResult=0, totTotal=0;
+      spBody.innerHTML = partners.map(p => {
+        const sharePct   = sellPrice > 0 ? (p.capital / sellPrice) * 100 : (totalShares > 0 ? (p.capital / totalShares) * 100 : 0);
+        const partResult = totalShares > 0 ? (p.capital / totalShares) * netResult : 0;
+        const total      = p.capital + partResult;
+        totShare += p.capital; totResult += partResult; totTotal += total;
+        const resColor = partResult >= 0 ? 'var(--green)' : 'var(--red)';
+        return `<tr>
+          <td style="font-weight:800">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:8px;height:8px;border-radius:50%;background:${p.color}"></div>
+              ${p.name}
+            </div>
+          </td>
+          <td style="color:var(--gold2);font-weight:700">${n(p.capital)}</td>
+          <td style="color:var(--blue2);font-weight:700">${sharePct.toFixed(2)}%</td>
+          <td style="color:${resColor};font-weight:800">${partResult >= 0 ? '+' : ''}${n(partResult)}</td>
+          <td style="color:${total >= p.capital ? 'var(--green)' : 'var(--red)'};font-weight:900">${n(total)}</td>
+        </tr>`;
+      }).join('');
+      const fc = totResult >= 0 ? 'var(--green)' : 'var(--red)';
+      spFoot.innerHTML = `<tr style="background:var(--surface2)">
+        <td style="font-weight:900">الإجمالي</td>
+        <td style="color:var(--gold2);font-weight:900">${n(totShare)}</td>
+        <td style="color:var(--blue2);font-weight:900">100%</td>
+        <td style="color:${fc};font-weight:900">${totResult >= 0 ? '+' : ''}${n(totResult)}</td>
+        <td style="color:${fc};font-weight:900">${n(totTotal)}</td>
+      </tr>`;
+    }
+  }
+
+}
+
+function exportData() {
+  const sellPrice = document.getElementById('j-sell-price')?.value || '0';
+  const data = {
+    version: '2.0',
+    exportedAt: new Date().toISOString(),
+    expenses,
+    partners,
+    plan,
+    jadwaLands,
+    jadwaProjects,
+    sellPrice
+  };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `نهضة-نسخة-احتياطية-${new Date().toLocaleDateString('en-CA')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('✅ تم تصدير النسخة الاحتياطية');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.expenses || !data.partners) {
+        toast('⚠️ الملف غير صالح', '#e53e5a'); return;
+      }
+      expenses      = data.expenses      || [];
+      partners      = data.partners      || [];
+      plan          = data.plan          || [];
+      jadwaLands    = data.jadwaLands    || [];
+      jadwaProjects = data.jadwaProjects || (data.jadwaFloors ? [{ id:1, name:'المشروع الأول', baseArea:0, floors: data.jadwaFloors }] : []);
+      localStorage.setItem('exp',       JSON.stringify(expenses));
+      localStorage.setItem('par',       JSON.stringify(partners));
+      localStorage.setItem('plan',      JSON.stringify(plan));
+      localStorage.setItem('jLands',    JSON.stringify(jadwaLands));
+      localStorage.setItem('jProjects', JSON.stringify(jadwaProjects));
+      if (data.sellPrice) {
+        const sp = document.getElementById('j-sell-price');
+        if (sp) sp.value = data.sellPrice;
+      }
+      calcPcts(); renderAll();
+      toast(`✅ تم استيراد النسخة الاحتياطية (${data.exportedAt ? new Date(data.exportedAt).toLocaleDateString('ar-SA') : ''})`);
+    } catch {
+      toast('⚠️ حدث خطأ في قراءة الملف', '#e53e5a');
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ─── EDIT MODAL ───────────────────────────────────────────
+let editingId = null;
+
+function openEditModal(id) {
+  const e = expenses.find(x => x.id === id);
+  if (!e) return;
+  editingId = id;
+  document.getElementById('edit-name').value   = e.name;
+  document.getElementById('edit-amount').value = e.amount;
+  document.getElementById('edit-cat').value    = e.cat;
+  document.getElementById('edit-date').value   = e.date || '';
+  document.getElementById('edit-notes').value  = e.notes || '';
+  const modal = document.getElementById('edit-modal');
+  modal.style.display = 'flex';
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+  editingId = null;
+}
+
+function saveEdit() {
+  const name   = document.getElementById('edit-name').value.trim();
+  const amount = parseFloat(document.getElementById('edit-amount').value);
+  const cat    = document.getElementById('edit-cat').value;
+  const date   = document.getElementById('edit-date').value;
+  const notes  = document.getElementById('edit-notes').value.trim();
+
+  if (!name || isNaN(amount) || amount <= 0) {
+    toast('⚠️ يرجى إدخال الاسم والمبلغ', '#e53e5a'); return;
+  }
+
+  const idx = expenses.findIndex(x => x.id === editingId);
+  if (idx !== -1) {
+    snapshot();
+    expenses[idx] = { ...expenses[idx], name, amount, cat, date, notes };
+    save(); renderAll();
+    toast('✅ تم حفظ التعديل بنجاح');
+  }
+  closeEditModal();
+}
+
+const _epm = document.getElementById('edit-plan-modal'); if (_epm) _epm.addEventListener('click', function(e) {
+  if (e.target === this) closeEditPlan();
+});
+
+// close modal on backdrop click
+const _em = document.getElementById('edit-modal'); if (_em) _em.addEventListener('click', function(e) {
+  if (e.target === this) closeEditModal();
+});
+
+// ─── FLOORS CALCULATOR ────────────────────────────────────
+let floors = JSON.parse(localStorage.getItem('floors') || '[]');
+
+function getRate(id) {
+  return parseFloat((document.getElementById(id)?.value || '0').replace(/,/g,'')) || 0;
+}
+
+function getTotalRate() {
+  return getRate('rate-athm') + getRate('rate-elec') + getRate('rate-plumb') +
+         getRate('rate-tile') + getRate('rate-paint') + getRate('rate-gypsum') +
+         getRate('rate-doors') + getRate('rate-other');
+}
+
+function calcFloors() {
+  const total = getTotalRate();
+  const el = document.getElementById('total-rate');
+  if (el) el.textContent = 'SAR ' + total.toLocaleString('en-US');
+  renderFloors();
+}
+
+function addFloor() {
+  const name  = document.getElementById('floor-name').value.trim();
+  const area  = parseFloat(document.getElementById('floor-area').value.replace(/,/g,''));
+  const adj   = parseFloat(document.getElementById('floor-adj').value) || 0;
+  const notes = document.getElementById('floor-notes').value.trim();
+
+  if (!name || isNaN(area) || area <= 0) {
+    toast('⚠️ يرجى إدخال اسم الدور والمساحة', '#e53e5a'); return;
+  }
+
+  floors.push({ id: Date.now(), name, area, adj, notes });
+  localStorage.setItem('floors', JSON.stringify(floors));
+  renderFloors();
+  document.getElementById('floor-name').value  = '';
+  document.getElementById('floor-area').value  = '';
+  document.getElementById('floor-adj').value   = '0';
+  document.getElementById('floor-notes').value = '';
+  toast('✅ تمت إضافة الدور بنجاح');
+}
+
+function deleteFloor(id) {
+  const f = floors.find(f => f.id === id);
+  confirmDelete(`سيتم حذف الدور "${f?.name}" نهائياً.`, () => {
+    floors = floors.filter(f => f.id !== id);
+    localStorage.setItem('floors', JSON.stringify(floors));
+    renderFloors();
+    toast('🗑️ تم حذف الدور', '#e53e5a');
+  });
+}
+
+function renderFloors() {
+  const tbody  = document.getElementById('floors-table');
+  const empty  = document.getElementById('floors-empty');
+  const sumSec = document.getElementById('floors-summary');
+  if (!tbody) return;
+
+  const rAthm  = getRate('rate-athm');
+  const rElec  = getRate('rate-elec');
+  const rPlumb = getRate('rate-plumb');
+  const rTile  = getRate('rate-tile');
+  const rPaint = getRate('rate-paint');
+  const rGypsum= getRate('rate-gypsum');
+  const rDoors = getRate('rate-doors');
+  const rOther = getRate('rate-other');
+  const baseRate = rAthm + rElec + rPlumb + rTile + rPaint + rGypsum + rDoors + rOther;
+
+  if (floors.length === 0) {
+    tbody.innerHTML = ''; empty.style.display = 'block';
+    sumSec.style.display = 'none'; return;
+  }
+  empty.style.display = 'none';
+  sumSec.style.display = 'block';
+
+  tbody.innerHTML = floors.map((f, i) => {
+    const adjFactor = 1 + (f.adj / 100);
+    const rate = baseRate * adjFactor;
+    const cAthm  = rAthm  * f.area * adjFactor;
+    const cElec  = rElec  * f.area * adjFactor;
+    const cPlumb = rPlumb * f.area * adjFactor;
+    const cTile  = rTile  * f.area * adjFactor;
+    const cPaint = rPaint * f.area * adjFactor;
+    const cGypsum= rGypsum* f.area * adjFactor;
+    const cDoors = rDoors * f.area * adjFactor;
+    const cOther = rOther * f.area * adjFactor;
+    const total  = rate * f.area;
+    const n = (v) => v.toLocaleString('en-US', {maximumFractionDigits:0});
+    return `
+    <tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="font-weight:800">${f.name}</td>
+      <td style="color:var(--blue2);font-weight:700">${n(f.area)} م²</td>
+      <td style="color:var(--muted);font-size:12px">${n(rate)}${f.adj ? ` <span style="color:var(--gold);font-size:11px">(${f.adj>0?'+':''}${f.adj}%)</span>` : ''}</td>
+      <td style="font-size:12px">${n(cAthm)}</td>
+      <td style="font-size:12px">${n(cElec)}</td>
+      <td style="font-size:12px">${n(cPlumb)}</td>
+      <td style="font-size:12px">${n(cTile)}</td>
+      <td style="font-size:12px">${n(cPaint)}</td>
+      <td style="font-size:12px">${n(cGypsum)}</td>
+      <td style="font-size:12px">${n(cDoors)}</td>
+      <td style="font-size:12px">${n(cOther)}</td>
+      <td style="color:var(--gold2);font-weight:900;font-size:14px">SAR ${n(total)}</td>
+      <td style="color:var(--muted);font-size:12px">${f.notes||'—'}</td>
+      <td><button class="btn btn-red" onclick="deleteFloor(${f.id})" style="padding:6px 12px;font-size:12px">حذف</button></td>
+    </tr>`;
+  }).join('');
+
+  // summary stats
+  const totalArea = floors.reduce((s, f) => s + f.area, 0);
+  const totalCost = floors.reduce((f, fl) => {
+    const r = baseRate * (1 + fl.adj/100);
+    return f + r * fl.area;
+  }, 0);
+  const n = (v) => v.toLocaleString('en-US', {maximumFractionDigits:0});
+
+  document.getElementById('floors-stats').innerHTML = `
+    <div class="stat-card blue"><div class="stat-label">عدد الأدوار</div><div class="stat-value">${floors.length}</div></div>
+    <div class="stat-card gold"><div class="stat-label">إجمالي المساحة</div><div class="stat-value">${n(totalArea)} م²</div></div>
+    <div class="stat-card red"><div class="stat-label">إجمالي التكلفة المتوقعة</div><div class="stat-value" style="font-size:20px">SAR ${n(totalCost)}</div></div>
+    <div class="stat-card green"><div class="stat-label">متوسط تكلفة المتر</div><div class="stat-value">${n(totalArea ? totalCost/totalArea : 0)}</div></div>
+  `;
+}
+
+// ─── دراسة جدوى ───────────────────────────────────────────
+let jadwaLands    = JSON.parse(localStorage.getItem('jLands')    || '[]');
+let jadwaPartners = JSON.parse(localStorage.getItem('jPartners') || '[]');
+
+function addLand() {
+  const name  = document.getElementById('jl-name').value.trim() || ('أرض ' + (jadwaLands.length + 1));
+  const area  = parseFloat(document.getElementById('jl-area').value.replace(/,/g,'')) || 0;
+  const price = parseFloat(document.getElementById('jl-price').value.replace(/,/g,'')) || 0;
+  const tax   = parseFloat(document.getElementById('jl-tax').value) || 0;
+  const comm  = parseFloat(document.getElementById('jl-comm').value) || 0;
+  if (area <= 0 || price <= 0) { toast('⚠️ يرجى إدخال المساحة والسعر', '#e53e5a'); return; }
+  snapshot();
+  jadwaLands.push({ id: Date.now(), name, area, price, tax, comm });
+  localStorage.setItem('jLands', JSON.stringify(jadwaLands));
+  saveToFirestore();
+  document.getElementById('jl-name').value  = '';
+  document.getElementById('jl-area').value  = '';
+  document.getElementById('jl-price').value = '';
+  calcJadwa();
+  toast('✅ تمت إضافة الأرض');
+}
+
+function deleteLand(id) {
+  const l = jadwaLands.find(l => l.id === id);
+  confirmDelete(`سيتم حذف الأرض "${l?.name}" نهائياً.`, () => {
+    snapshot();
+    jadwaLands = jadwaLands.filter(l => l.id !== id);
+    localStorage.setItem('jLands', JSON.stringify(jadwaLands));
+    saveToFirestore();
+    calcJadwa();
+    toast('🗑️ تم حذف الأرض', '#e53e5a');
+  });
+}
+
+// Default projects if empty
+let jadwaProjects = JSON.parse(localStorage.getItem('jProjects') || '[]');
+if (jadwaProjects.length === 0) {
+  jadwaProjects = [{
+    id: 1, name: 'المشروع الأول', baseArea: 1050,
+    floors: [
+      { id: 1, name: 'قبو',  pct: 60, customCost: 1000 },
+      { id: 2, name: 'ارضي', pct: 60, customCost: 1800 },
+      { id: 3, name: 'اول',  pct: 70, customCost: 1800 },
+      { id: 4, name: 'ثاني', pct: 0,  customCost: 1800 },
+      { id: 5, name: 'ثالث', pct: 35, customCost: 1800 },
+    ]
+  }];
+  localStorage.setItem('jProjects', JSON.stringify(jadwaProjects));
+}
+
+function saveProjects() {
+  localStorage.setItem('jProjects', JSON.stringify(jadwaProjects));
+  saveToFirestore();
+}
+
+function populateLandDropdown() {
+  const sel = document.getElementById('jproj-land');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— اختر أرضاً —</option>';
+  jadwaLands.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.id;
+    opt.textContent = l.name + ' (' + l.area.toLocaleString('en') + ' م²)';
+    sel.appendChild(opt);
+  });
+  if (current) sel.value = current;
+}
+
+function addProject() {
+  const sel  = document.getElementById('jproj-land');
+  const lid  = parseInt(sel.value);
+  const land = jadwaLands.find(l => l.id === lid);
+  if (!land) { toast('⚠️ اختر أرضاً من القائمة أولاً', '#e53e5a'); return; }
+  // prevent duplicate project for same land
+  if (jadwaProjects.find(p => p.landId === lid)) {
+    toast('⚠️ هذه الأرض مضاف لها مشروع بالفعل', '#e53e5a'); return;
+  }
+  snapshot();
+  jadwaProjects.push({ id: Date.now(), landId: lid, name: land.name, baseArea: land.area, floors: [] });
+  saveProjects();
+  sel.value = '';
+  calcJadwa();
+  toast('✅ تمت إضافة المشروع');
+}
+
+function deleteProject(pid) {
+  const proj = jadwaProjects.find(p => p.id === pid);
+  confirmDelete(`سيتم حذف مشروع "${proj?.name}" وجميع أدواره نهائياً.`, () => {
+    snapshot();
+    jadwaProjects = jadwaProjects.filter(p => p.id !== pid);
+    saveProjects(); calcJadwa();
+    toast('🗑️ تم حذف المشروع', '#e53e5a');
+  });
+}
+
+function addFloorToProject(pid) {
+  const proj = jadwaProjects.find(p => p.id === pid);
+  if (!proj) return;
+  const name = document.getElementById('jf-name-' + pid).value.trim();
+  const pct  = parseFloat(document.getElementById('jf-pct-' + pid).value) || 0;
+  const costRaw = document.getElementById('jf-cost-' + pid).value.replace(/,/g,'');
+  const customCost = costRaw ? parseFloat(costRaw) || null : null;
+  if (!name) { toast('⚠️ أدخل اسم الدور', '#e53e5a'); return; }
+  snapshot();
+  proj.floors.push({ id: Date.now(), name, pct, customCost });
+  saveProjects();
+  document.getElementById('jf-name-' + pid).value = '';
+  document.getElementById('jf-pct-' + pid).value  = '';
+  document.getElementById('jf-cost-' + pid).value = '';
+  calcJadwa();
+  toast('✅ تمت إضافة الدور');
+}
+
+function deleteFloor(pid, fid) {
+  const proj = jadwaProjects.find(p => p.id === pid);
+  const floor = proj?.floors.find(f => f.id === fid);
+  confirmDelete(`سيتم حذف الدور "${floor?.name}" نهائياً.`, () => {
+    snapshot();
+    proj.floors = proj.floors.filter(f => f.id !== fid);
+    saveProjects(); calcJadwa();
+  });
+}
+
+function updateFloorPct(pid, fidx, val) {
+  jadwaProjects.find(p => p.id === pid).floors[fidx].pct = parseFloat(val) || 0;
+  saveProjects(); calcJadwa();
+}
+
+function updateFloorCost(pid, fidx, val) {
+  jadwaProjects.find(p => p.id === pid).floors[fidx].customCost = val ? parseFloat(val.replace(/,/g,'')) || null : null;
+  saveProjects(); calcJadwa();
+}
+
+function updateProjectArea(pid, val) {
+  jadwaProjects.find(p => p.id === pid).baseArea = parseFloat(val.replace(/,/g,'')) || 0;
+  saveProjects(); calcJadwa();
+}
+
+function getJ(id) {
+  return parseFloat((document.getElementById(id)?.value||'0').replace(/,/g,''))||0;
+}
+
+function addJadwaPartner() {
+  const name  = document.getElementById('jp-name').value.trim();
+  const share = parseFloat(document.getElementById('jp-share').value.replace(/,/g,''));
+  if (!name || isNaN(share) || share < 0) { toast('⚠️ أدخل الاسم والسهم', '#e53e5a'); return; }
+  jadwaPartners.push({ id: Date.now(), name, share });
+  localStorage.setItem('jPartners', JSON.stringify(jadwaPartners));
+  document.getElementById('jp-name').value  = '';
+  document.getElementById('jp-share').value = '';
+  calcJadwa();
+  toast('✅ تمت إضافة الشريك');
+}
+
+function deleteJadwaPartner(id) {
+  const p = jadwaPartners.find(p => p.id === id);
+  confirmDelete(`سيتم حذف الشريك "${p?.name}" من الجدوى نهائياً.`, () => {
+    jadwaPartners = jadwaPartners.filter(p => p.id !== id);
+    localStorage.setItem('jPartners', JSON.stringify(jadwaPartners));
+    calcJadwa();
+    toast('🗑️ تم حذف الشريك', '#e53e5a');
+  });
+}
+
+function calcJadwa() {
+  const n = (v, d=0) => (v||0).toLocaleString('en-US', {maximumFractionDigits:d, minimumFractionDigits:d});
+  const pct = (v) => (v||0).toFixed(2) + '%';
+
+  populateLandDropdown();
+
+  // ── LANDS ──
+  let landTotal = 0;
+  const landsBodyEl = document.getElementById('j-lands-body');
+  const landsFootEl = document.getElementById('j-lands-foot');
+  const landsEmpty  = document.getElementById('j-lands-empty');
+  const landsBadge  = document.getElementById('j-lands-total-badge');
+
+  // calc each land
+  const landsCalc = jadwaLands.map(l => {
+    const base    = l.area * l.price;
+    const taxAmt  = base * l.tax / 100;
+    const commAmt = base * l.comm / 100;
+    const total   = base + taxAmt + commAmt;
+    return { ...l, base, taxAmt, commAmt, total };
+  });
+  landTotal = landsCalc.reduce((s, l) => s + l.total, 0);
+
+  if (landsBodyEl) {
+    if (jadwaLands.length === 0) {
+      landsBodyEl.innerHTML = '';
+      landsFootEl.innerHTML = '';
+      if (landsEmpty) landsEmpty.style.display = 'block';
+    } else {
+      if (landsEmpty) landsEmpty.style.display = 'none';
+      landsBodyEl.innerHTML = landsCalc.map((l, i) => `
+        <tr>
+          <td style="color:var(--muted)">${i+1}</td>
+          <td style="font-weight:800">${l.name}</td>
+          <td style="color:var(--blue2);font-weight:700">${n(l.area)}</td>
+          <td>${n(l.price)}</td>
+          <td>${n(l.base)}</td>
+          <td style="color:var(--red)">
+            <div style="font-size:11px;color:var(--muted)">${l.tax}%</div>
+            <div style="font-weight:700">${n(l.taxAmt)}</div>
+          </td>
+          <td style="color:var(--red)">
+            <div style="font-size:11px;color:var(--muted)">${l.comm}%</div>
+            <div style="font-weight:700">${n(l.commAmt)}</div>
+          </td>
+          <td style="color:var(--gold2);font-weight:900">${n(l.total)}</td>
+          <td style="color:var(--green);font-weight:700">${landTotal > 0 ? (l.total/landTotal*100).toFixed(1)+'%' : '—'}</td>
+          <td><button class="btn btn-red" onclick="deleteLand(${l.id})" style="padding:4px 10px;font-size:11px">حذف</button></td>
+        </tr>`).join('');
+      landsFootEl.innerHTML = `<tr style="background:var(--surface2)">
+        <td colspan="4" style="font-weight:900">الإجمالي</td>
+        <td style="color:var(--blue2);font-weight:900">${n(landsCalc.reduce((s,l)=>s+l.base,0))}</td>
+        <td style="color:var(--red);font-weight:900">${n(landsCalc.reduce((s,l)=>s+l.taxAmt,0))}</td>
+        <td style="color:var(--red);font-weight:900">${n(landsCalc.reduce((s,l)=>s+l.commAmt,0))}</td>
+        <td style="color:var(--gold2);font-weight:900">${n(landTotal)}</td>
+        <td style="color:var(--green);font-weight:900">100%</td>
+        <td></td>
+      </tr>`;
+    }
+    if (landsBadge) landsBadge.innerHTML = jadwaLands.length > 0
+      ? `<span class="badge badge-gold">إجمالي الأراضي: SAR ${n(landTotal)}</span>` : '';
+  }
+
+  // ── PROJECTS / FLOORS ──
+  const projContainer = document.getElementById('j-projects-container');
+  const projEmpty     = document.getElementById('j-projects-empty');
+  const buildBadge    = document.getElementById('j-build-total-badge');
+
+  let totalBuildCost = 0;
+
+  if (projContainer) {
+    if (jadwaProjects.length === 0) {
+      projContainer.innerHTML = '';
+      if (projEmpty) projEmpty.style.display = 'block';
+    } else {
+      if (projEmpty) projEmpty.style.display = 'none';
+      const n2 = n;
+
+      projContainer.innerHTML = jadwaProjects.map(proj => {
+        // sync name/area from linked land if available
+        const linkedLand = jadwaLands.find(l => l.id === proj.landId);
+        if (linkedLand) { proj.name = linkedLand.name; proj.baseArea = linkedLand.area; }
+        let projArea = 0, projCost = 0;
+        const rows = proj.floors.map((f, fi) => {
+          const costPerM2 = f.customCost !== null ? f.customCost : 0;
+          const area  = proj.baseArea * (f.pct / 100);
+          const total = area * costPerM2;
+          projArea += area; projCost += total;
+          return `<tr>
+            <td style="font-weight:800">${f.name}</td>
+            <td><input type="number" value="${f.pct}" min="0"
+              style="width:70px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:Tajawal,sans-serif;padding:4px 8px;text-align:center"
+              onchange="updateFloorPct(${proj.id},${fi},this.value)"></td>
+            <td style="color:var(--blue2);font-weight:700">${n2(area,1)}</td>
+            <td><input type="text" value="${f.customCost !== null ? f.customCost.toLocaleString('en') : ''}" placeholder="0"
+              style="width:100px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:Tajawal,sans-serif;padding:4px 8px;text-align:center"
+              onchange="updateFloorCost(${proj.id},${fi},this.value)"></td>
+            <td style="color:var(--gold2);font-weight:900">${n2(total)}</td>
+            <td><button class="btn btn-red" onclick="deleteFloor(${proj.id},${f.id})" style="padding:4px 10px;font-size:11px">حذف</button></td>
+          </tr>`;
+        }).join('');
+        totalBuildCost += projCost;
+
+        return `
+        <div style="border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;background:var(--bg)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <span style="font-size:16px;font-weight:900;color:var(--blue2)">${proj.name}</span>
+              <div style="display:flex;align-items:center;gap:6px">
+                <label style="font-size:12px;color:var(--muted)">مساحة الأرض:</label>
+                <input type="text" value="${proj.baseArea.toLocaleString('en')}"
+                  style="width:100px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:Tajawal,sans-serif;padding:4px 10px;font-size:13px"
+                  oninput="formatCapitalInput(this)" onchange="updateProjectArea(${proj.id},this.value)">
+                <span style="font-size:12px;color:var(--muted)">م²</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="badge badge-blue">تكلفة البناء: SAR ${n2(projCost)}</span>
+              <button class="btn btn-red" onclick="deleteProject(${proj.id})" style="padding:4px 12px;font-size:12px">🗑️ حذف المشروع</button>
+            </div>
+          </div>
+
+          <div class="table-wrap" style="margin-bottom:14px">
+            <table>
+              <thead><tr>
+                <th>الدور</th><th>النسبة %</th><th>المسطح (م²)</th>
+                <th>تكلفة/م²</th><th>الإجمالي</th><th></th>
+              </tr></thead>
+              <tbody>${rows}</tbody>
+              <tfoot><tr style="background:var(--surface2)">
+                <td colspan="2" style="font-weight:900">الإجمالي</td>
+                <td style="color:var(--blue2);font-weight:900">${n2(projArea,1)} م²</td>
+                <td></td>
+                <td style="color:var(--gold2);font-weight:900">${n2(projCost)}</td>
+                <td></td>
+              </tr></tfoot>
+            </table>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+            <div class="form-group" style="min-width:120px;margin-bottom:0"><label>اسم الدور</label>
+              <input id="jf-name-${proj.id}" type="text" placeholder="مثال: قبو"></div>
+            <div class="form-group" style="min-width:90px;margin-bottom:0"><label>النسبة %</label>
+              <input id="jf-pct-${proj.id}" type="number" placeholder="60" min="0"></div>
+            <div class="form-group" style="min-width:110px;margin-bottom:0"><label>تكلفة/م²</label>
+              <input id="jf-cost-${proj.id}" type="text" placeholder="0" oninput="formatCapitalInput(this)"></div>
+            <button class="btn btn-gold" onclick="addFloorToProject(${proj.id})" style="margin-bottom:0">➕ إضافة دور</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    if (buildBadge) buildBadge.innerHTML = jadwaProjects.length > 0
+      ? `<span class="badge badge-blue">إجمالي البناء: SAR ${n(totalBuildCost)}</span>` : '';
+  }
+
+  // ── PARTNERS (from partners page) ──
+  const sellPrice   = getJ('j-sell-price');
+  const jadwaPartners = partners.map(p => ({ id: p.id, name: p.name, share: p.capital, color: p.color }));
+  const totalShares = jadwaPartners.reduce((s, p) => s + p.share, 0);
+  const budget      = totalShares;
+  const totalCostAll = landTotal + totalBuildCost;
+  // صافي الربح أو العجز الكلي
+  const netResult   = sellPrice > 0 ? sellPrice - totalCostAll : -totalCostAll;
+
+  const pBodyEl  = document.getElementById('j-partners-body');
+  const pFootEl  = document.getElementById('j-partners-foot');
+  const pEmptyEl = document.getElementById('j-partners-empty');
+
+  if (pBodyEl) {
+    if (jadwaPartners.length === 0) {
+      pBodyEl.innerHTML = ''; pFootEl.innerHTML = '';
+      if (pEmptyEl) pEmptyEl.style.display = 'block';
+    } else {
+      if (pEmptyEl) pEmptyEl.style.display = 'none';
+
+      let totShare=0, totCostShare=0, totSellShare=0, totResult=0, totTotal=0;
+      pBodyEl.innerHTML = jadwaPartners.map(p => {
+        const ownerPct   = totalShares > 0 ? p.share / totalShares : 0;
+        const sharePct   = sellPrice > 0 ? (p.share / sellPrice) * 100 : ownerPct * 100;
+        // نصيبه من التكاليف الكلية
+        const costShare  = ownerPct * totalCostAll;
+        // نصيبه من سعر البيع
+        const sellShare  = ownerPct * sellPrice;
+        // فائض/عجز = حصته − نصيبه من التكاليف
+        const partResult = p.share - costShare;
+        const netProfit  = sellPrice > 0 ? sellPrice - totalCostAll : 0;
+        const profitShare = netProfit > 0 ? ownerPct * netProfit : 0;
+        let total;
+        if (partResult >= 0) {
+          // فائض: المجموع = الفائض + نصيبه من الأرباح
+          total = partResult + profitShare;
+        } else {
+          // عجز: يُخصم أولاً من الأرباح، ثم من حصته إن لزم
+          const afterProfit = profitShare + partResult; // partResult سالب
+          total = afterProfit >= 0 ? afterProfit : p.share + partResult + profitShare;
+        }
+        totShare += p.share; totCostShare += costShare;
+        totSellShare += sellShare; totResult += partResult; totTotal += total;
+        const resColor = partResult >= 0 ? 'var(--green)' : 'var(--red)';
+        return `<tr>
+          <td style="font-weight:800">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:8px;height:8px;border-radius:50%;background:${p.color}"></div>
+              ${p.name}
+            </div>
+          </td>
+          <td style="color:var(--gold2);font-weight:700">${n(p.share)}</td>
+          <td style="color:var(--blue2);font-weight:700">${pct(ownerPct*100)}</td>
+          <td style="color:var(--red);font-weight:700">${n(costShare)}</td>
+          <td style="color:${resColor};font-weight:900">${partResult >= 0 ? '+' : ''}${n(partResult)}</td>
+          <td style="color:#c084fc;font-weight:700">${sellPrice > 0 ? n(sellShare) : '—'}</td>
+          <td style="color:${total >= 0 ? 'var(--green)' : 'var(--red)'};font-weight:900">${total >= 0 ? '+' : ''}${n(total)}</td>
+        </tr>`;
+      }).join('');
+
+      const footColor = totResult >= 0 ? 'var(--green)' : 'var(--red)';
+      pFootEl.innerHTML = `<tr style="background:var(--surface2)">
+        <td style="font-weight:900">الإجمالي</td>
+        <td style="color:var(--gold2);font-weight:900">${n(totShare)}</td>
+        <td style="color:var(--blue2);font-weight:900">100%</td>
+        <td style="color:var(--red);font-weight:900">${n(totCostShare)}</td>
+        <td style="color:${footColor};font-weight:900">${totResult >= 0 ? '+' : ''}${n(totResult)}</td>
+        <td style="color:#c084fc;font-weight:900">${sellPrice > 0 ? n(totSellShare) : '—'}</td>
+        <td style="color:${footColor};font-weight:900">${n(totTotal)}</td>
+      </tr>`;
+    }
+  }
+
+  // ── FINANCIAL BOXES ──
+  const topBoxes = document.getElementById('j-top-boxes');
+  const botBoxes = document.getElementById('j-bottom-boxes');
+
+  if (topBoxes) {
+    const diff       = budget - totalCostAll;
+    const isPos      = diff >= 0;
+    const diffColor  = isPos ? 'var(--green)' : 'var(--red)';
+    const diffBg     = isPos ? '#22c55e22' : '#e53e5a22';
+    const diffBorder = isPos ? 'var(--green)' : 'var(--red)';
+    const diffLabel  = isPos ? '✅ فائض' : '❌ عجز';
+
+    topBoxes.innerHTML = `
+      <div style="background:#c9a22722;border:1px solid var(--gold);border-radius:14px;padding:20px;text-align:center">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px;letter-spacing:.5px">الميزانية</div>
+        <div style="font-size:22px;font-weight:900;color:var(--gold2)">${n(budget)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">ريال</div>
+      </div>
+      <div style="background:#1e6fff22;border:1px solid var(--blue2);border-radius:14px;padding:20px;text-align:center">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px;letter-spacing:.5px">إجمالي التكاليف</div>
+        <div style="font-size:22px;font-weight:900;color:var(--blue2)">${n(totalCostAll)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">أرض ${n(landTotal)} + بناء ${n(totalBuildCost)}</div>
+      </div>
+      <div style="background:${diffBg};border:2px solid ${diffBorder};border-radius:14px;padding:20px;text-align:center">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px;letter-spacing:.5px">${diffLabel}</div>
+        <div style="font-size:22px;font-weight:900;color:${diffColor}">${diff >= 0 ? '+' : ''}${n(diff)}</div>
+        <div style="font-size:11px;color:${diffColor};margin-top:4px;font-weight:700">ريال</div>
+      </div>`;
+  }
+
+  if (botBoxes) {
+    const netProfit    = sellPrice > 0 ? sellPrice - totalCostAll : 0;
+    const profitPctVal = totalCostAll > 0 && sellPrice > 0 ? (netProfit / totalCostAll) * 100 : 0;
+    const isProfit     = netProfit >= 0;
+    const pColor       = sellPrice > 0 ? (isProfit ? 'var(--green)' : 'var(--red)') : 'var(--muted)';
+    const pBg          = sellPrice > 0 ? (isProfit ? '#22c55e22' : '#e53e5a22') : 'var(--surface)';
+    const pBorder      = sellPrice > 0 ? (isProfit ? 'var(--green)' : 'var(--red)') : 'var(--border)';
+    const pLabel       = sellPrice === 0 ? '—' : (isProfit ? `✅ ربح ${profitPctVal.toFixed(2)}%` : `❌ خسارة ${Math.abs(profitPctVal).toFixed(2)}%`);
+    const pSub         = sellPrice === 0 ? 'أدخل قيمة البيع لحساب الربح' : `صافي: ${netProfit >= 0 ? '+' : ''}${n(netProfit)} ريال`;
+
+    botBoxes.innerHTML = `
+      <div style="background:${pBg};border:2px solid ${pBorder};border-radius:14px;padding:20px;text-align:center;display:flex;flex-direction:column;justify-content:center">
+        <div style="font-size:13px;color:var(--muted);font-weight:700;margin-bottom:8px">نسبة الربح / الخسارة</div>
+        <div style="font-size:26px;font-weight:900;color:${pColor}">${pLabel}</div>
+        <div style="font-size:12px;color:${pColor};margin-top:6px;font-weight:700">${pSub}</div>
+      </div>`;
+  }
+}
+
+// ─── HELPERS ──────────────────────────────────────────────
+function formatCapitalInput(el) {
+  const raw = el.value.replace(/,/g, '').replace(/[^0-9.]/g, '');
+  const num = parseFloat(raw);
+  if (!isNaN(num)) {
+    const parts = raw.split('.');
+    parts[0] = parseInt(parts[0]).toLocaleString('en');
+    el.value = parts.join('.');
+  } else {
+    el.value = raw === '' ? '' : el.value;
+  }
+}
+
+function renderExpenseChart() {
+  const section = document.getElementById('exp-chart-section');
+  if (!section) return;
+  if (expenses.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  // build category totals
+  const CAT_COLORS = {
+    'عظم':'#c9a227','كهرباء':'#1e6fff','سباكة':'#22c55e','بلاط':'#e53e5a',
+    'بوية':'#a855f7','جبس':'#f97316','ابواب':'#4d9fff','شبابيك':'#34d399',
+    'مبسط':'#f472b6','أخرى':'#94a3b8'
+  };
+  const cats = {};
+  expenses.forEach(e => {
+    if (!cats[e.cat]) cats[e.cat] = 0;
+    cats[e.cat] += e.amount;
+  });
+  const total = Object.values(cats).reduce((s, v) => s + v, 0);
+  const sorted = Object.entries(cats).sort((a, b) => b[1] - a[1]);
+
+  // ── Donut ──
+  const canvas = document.getElementById('exp-donut');
+  const ctx = canvas.getContext('2d');
+  const cx = 120, cy = 120, R = 95, r = 58;
+  ctx.clearRect(0, 0, 240, 240);
+  let angle = -Math.PI / 2;
+  sorted.forEach(([cat, val]) => {
+    const slice = (val / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, angle, angle + slice);
+    ctx.closePath();
+    ctx.fillStyle = CAT_COLORS[cat] || '#94a3b8';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 1, angle, angle + slice);
+    ctx.closePath();
+    ctx.strokeStyle = '#0a0e1a';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    angle += slice;
+  });
+  // hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.fillStyle = '#111827';
+  ctx.fill();
+  // center label
+  ctx.fillStyle = '#f0c040';
+  ctx.font = 'bold 12px Tajawal,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('المصاريف', cx, cy - 8);
+  ctx.fillStyle = '#e8eaf0';
+  ctx.font = 'bold 11px Tajawal,sans-serif';
+  ctx.fillText(total.toLocaleString('en-US',{maximumFractionDigits:0}), cx, cy + 10);
+  ctx.fillStyle = '#6b7a99';
+  ctx.font = '10px Tajawal,sans-serif';
+  ctx.fillText('ريال', cx, cy + 25);
+
+  // legend
+  document.getElementById('exp-donut-legend').innerHTML = sorted.map(([cat, val]) => `
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:10px;height:10px;border-radius:3px;background:${CAT_COLORS[cat]||'#94a3b8'};flex-shrink:0"></div>
+      <div style="flex:1;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;font-weight:700">${cat}</span>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span style="font-size:12px;color:var(--muted)">${(val/total*100).toFixed(2)}%</span>
+          <span style="font-size:13px;font-weight:800;color:${CAT_COLORS[cat]||'#94a3b8'}">${val.toLocaleString('en-US',{maximumFractionDigits:0})}</span>
+        </div>
+      </div>
+    </div>`).join('');
+
+  // ── Bar chart ──
+  const max = sorted[0][1];
+  document.getElementById('exp-bars').innerHTML = sorted.map(([cat, val]) => `
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:13px;font-weight:700">${cat}</span>
+        <span style="font-size:13px;font-weight:800;color:${CAT_COLORS[cat]||'#94a3b8'}">${val.toLocaleString('en-US',{maximumFractionDigits:0})} ريال</span>
+      </div>
+      <div style="height:10px;background:var(--border);border-radius:6px;overflow:hidden">
+        <div style="height:100%;width:${(val/max*100).toFixed(2)}%;background:${CAT_COLORS[cat]||'#94a3b8'};border-radius:6px;transition:width .4s ease"></div>
+      </div>
+    </div>`).join('');
+}
+
+function fmt(n) {
+  return (n || 0).toLocaleString('en-US', { style:'currency', currency:'SAR', minimumFractionDigits: 2 });
+}
+
+function toast(msg, color = 'var(--green)') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.color = color;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function renderAll() {
+  renderExpenseStats();
+  renderExpenseTable();
+  renderExpenseChart();
+  renderPartners();
+  renderSummary();
+  calcJadwa();
+}
+
+// ─── INIT ─────────────────────────────────────────────────
+renderAll();
+updateUndoBtn();
+
+function showApp(msg) {
+  const bar = document.getElementById('loading-bar');
+  const txt = document.getElementById('loading-msg');
+  if (bar) bar.style.width = '100%';
+  if (txt) { txt.style.animation = 'none'; txt.textContent = msg || '✅ جاهز'; txt.style.color = 'var(--green)'; }
+  setTimeout(() => {
+    const ls = document.getElementById('loading-screen');
+    const hd = document.getElementById('app-header');
+    const mn = document.getElementById('app-main');
+    if (ls) { ls.style.opacity = '0'; ls.style.transition = 'opacity .5s'; setTimeout(() => ls.style.display = 'none', 500); }
+    if (hd) hd.style.display = '';
+    if (mn) mn.style.display = '';
+  }, 600);
+}
+
+function setLoadingMsg(msg, pct) {
+  const bar = document.getElementById('loading-bar');
+  const txt = document.getElementById('loading-msg');
+  if (bar) bar.style.width = (pct || 0) + '%';
+  if (txt) txt.textContent = msg;
+}
+
+// ─── SERVICE WORKER ───────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+
+<!-- Firebase Realtime Database -->
+<script type="module">
+import { initializeApp }           from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+setLoadingMsg('جاري تهيئة الاتصال...', 20);
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDbIVBZao91d0SbDRQ_fZfsUuI43Vj-ric",
+  authDomain: "alnahdah-7dd69.firebaseapp.com",
+  databaseURL: "https://alnahdah-7dd69-default-rtdb.firebaseio.com",
+  projectId: "alnahdah-7dd69",
+  storageBucket: "alnahdah-7dd69.firebasestorage.app",
+  messagingSenderId: "1074458541354",
+  appId: "1:1074458541354:web:3589cb633c28d530903253"
+};
+
+const app    = initializeApp(firebaseConfig);
+const db     = getDatabase(app);
+const DB_REF = ref(db, 'nahda-main-project'); // نفس مسار تطبيق الجوال
+
+setLoadingMsg('جاري الاتصال بالخادم...', 45);
+
+let isSaving  = false;
+let firstLoad = true;
+
+window.saveToFirestore = function() {
+  const sellPrice = document.getElementById('j-sell-price')?.value || '0';
+  isSaving = true;
+  set(DB_REF, {
+    expenses, partners, plan, jadwaLands, jadwaProjects, sellPrice,
+    updatedAt: Date.now()
+  }).then(() => {
+    setTimeout(() => { isSaving = false; }, 2000);
+  }).catch(e => {
+    isSaving = false;
+    console.error('DB save:', e);
+  });
+};
+
+setLoadingMsg('جاري تحميل البيانات...', 70);
+
+// مستمع للتحديثات الفورية من أي جهاز
+onValue(DB_REF, snap => {
+  if (isSaving) return;
+
+  if (snap.exists()) {
+    const d = snap.val();
+    expenses      = d.expenses      || [];
+    partners      = d.partners      || [];
+    plan          = d.plan          || [];
+    jadwaLands    = d.jadwaLands    || [];
+    jadwaProjects = d.jadwaProjects || [];
+    if (d.sellPrice) {
+      const sp = document.getElementById('j-sell-price');
+      if (sp && document.activeElement !== sp) sp.value = d.sellPrice;
+    }
+    localStorage.setItem('exp',       JSON.stringify(expenses));
+    localStorage.setItem('par',       JSON.stringify(partners));
+    localStorage.setItem('jLands',    JSON.stringify(jadwaLands));
+    localStorage.setItem('jProjects', JSON.stringify(jadwaProjects));
+    calcPcts(); renderAll();
+  }
+
+  if (firstLoad) {
+    firstLoad = false;
+    showApp(snap.exists() ? '✅ تم تحميل البيانات' : '✅ مرحباً — جاهز للبدء');
+  } else {
+    toast('🔄 تم استلام تحديث');
+  }
+}, err => {
+  console.error('DB error:', err);
+  if (firstLoad) {
+    firstLoad = false;
+    setLoadingMsg('⚠️ ' + err.message, 100);
+    setTimeout(() => showApp('⚠️ خطأ في الاتصال'), 1500);
+  }
+});
+</script>
+</body>
+</html>

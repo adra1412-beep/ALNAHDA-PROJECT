@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="مصروفات النهضة">
+<meta name="theme-color" content="#0a0e1a">
+<title>إضافة مصروف — النهضة</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a0e1a;--sur:#111827;--bdr:#1f2d45;--txt:#e8eaf0;--muted:#6b7a99;--gold:#c9a227;--gold2:#f0c040;--green:#22c55e;--red:#e53e5a}
+html{height:-webkit-fill-available}
+body{font-family:'Tajawal',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;min-height:-webkit-fill-available;padding-bottom:40px}
+
+#ls{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.sp{width:48px;height:48px;border:4px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#retry-btn{display:none;background:var(--gold);color:#0a0e1a;font-family:'Tajawal',sans-serif;font-size:15px;font-weight:900;padding:12px 28px;border:none;border-radius:30px;cursor:pointer;margin-top:8px}
+
+header{background:var(--sur);border-bottom:1px solid var(--bdr);padding:16px 20px;padding-top:calc(16px + env(safe-area-inset-top,0px));display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{font-size:17px;font-weight:900;color:var(--gold2)}
+.sdot{width:10px;height:10px;border-radius:50%;background:var(--muted);display:inline-block;transition:background .3s}
+.sdot.on{background:var(--green);box-shadow:0 0 8px #22c55e88}
+
+main{padding:16px;display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:8px}
+label{font-size:13px;font-weight:700;color:var(--muted)}
+input,textarea{background:var(--sur);border:1.5px solid var(--bdr);border-radius:12px;color:var(--txt);font-family:'Tajawal',sans-serif;font-size:16px;padding:14px 16px;width:100%;outline:none;-webkit-appearance:none;appearance:none}
+input:focus,textarea:focus{border-color:var(--gold)}
+textarea{resize:none;height:78px}
+.aw{position:relative}
+.aw input{font-size:28px;font-weight:900;color:var(--gold2);text-align:center;padding:18px 56px}
+.cur{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:700;color:var(--muted);pointer-events:none}
+
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cc{background:var(--sur);border:1.5px solid var(--bdr);border-radius:10px;padding:11px 4px;text-align:center;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;-webkit-user-select:none;user-select:none;transition:all .15s}
+.cc.active{border-color:var(--gold);color:var(--gold2);background:#c9a22720}
+
+.btn-add{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0e1a;font-family:'Tajawal',sans-serif;font-size:18px;font-weight:900;padding:18px;border:none;border-radius:14px;width:100%;cursor:pointer;-webkit-appearance:none;margin-top:4px}
+.btn-add:disabled{opacity:.4}
+.btn-add:active{opacity:.8}
+
+.ht{font-size:13px;font-weight:700;color:var(--muted)}
+.er{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.er .nm{font-weight:800;font-size:15px}
+.er .mt{font-size:11px;color:var(--muted);margin-top:3px}
+.er .am{font-size:17px;font-weight:900;color:var(--gold2);white-space:nowrap}
+
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e293b;color:#fff;padding:12px 24px;border-radius:30px;font-size:14px;font-weight:700;box-shadow:0 8px 32px #00000088;transition:transform .3s;z-index:9998;white-space:nowrap;pointer-events:none}
+#toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="ls">
+  <div style="font-size:52px">📊</div>
+  <div style="font-size:20px;font-weight:900;color:#f0c040">مشروع النهضة</div>
+  <div class="sp"></div>
+  <div id="lmsg" style="font-size:13px;color:#6b7a99;text-align:center;padding:0 20px">جاري الاتصال بالخادم...</div>
+  <button id="retry-btn" onclick="loadData()">🔄 إعادة المحاولة</button>
+</div>
+
+<header>
+  <div class="logo">➕ إضافة مصروف</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span id="slbl" style="font-size:11px;color:#6b7a99">...</span>
+    <span class="sdot" id="sdot"></span>
+  </div>
+</header>
+
+<main>
+  <div class="field">
+    <label>المبلغ (ريال)</label>
+    <div class="aw">
+      <input id="inp-amount" type="number" inputmode="decimal" placeholder="0" min="0" step="any">
+      <span class="cur">ر.س</span>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>البيان / الوصف</label>
+    <input id="inp-name" type="text" placeholder="مثال: مواد بناء، كهربائي...">
+  </div>
+
+  <div class="field">
+    <label>التصنيف</label>
+    <div class="cg">
+      <div class="cc active" data-cat="عظم">🏗️ عظم</div>
+      <div class="cc" data-cat="كهرباء">⚡ كهرباء</div>
+      <div class="cc" data-cat="سباكة">🔧 سباكة</div>
+      <div class="cc" data-cat="بلاط">🪨 بلاط</div>
+      <div class="cc" data-cat="بوية">🎨 بوية</div>
+      <div class="cc" data-cat="جبس">🪚 جبس</div>
+      <div class="cc" data-cat="ابواب">🚪 ابواب</div>
+      <div class="cc" data-cat="شبابيك">🪟 شبابيك</div>
+      <div class="cc" data-cat="مبسط">📋 مبسط</div>
+      <div class="cc" data-cat="مكتب هندسي">📐 هندسي</div>
+      <div class="cc" data-cat="شركة المياه">💧 مياه</div>
+      <div class="cc" data-cat="شركة الكهرباء">🏭 كهرباء ش.</div>
+      <div class="cc" data-cat="بلدية">🏛️ بلدية</div>
+      <div class="cc" data-cat="دفاع مدني">🚒 دفاع مدني</div>
+      <div class="cc" data-cat="تأمين">🔐 تأمين</div>
+      <div class="cc" data-cat="أخرى">📌 أخرى</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>التاريخ</label>
+    <input id="inp-date" type="date">
+  </div>
+
+  <div class="field">
+    <label>ملاحظات (اختياري)</label>
+    <textarea id="inp-notes" placeholder="أي تفاصيل إضافية..."></textarea>
+  </div>
+
+  <button class="btn-add" id="btn-add" disabled>💾 حفظ المصروف</button>
+
+  <div id="hw" style="display:none;flex-direction:column;gap:10px">
+    <div class="ht">آخر المصروفات المضافة</div>
+    <div id="hl" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ── Firebase REST API — لا يحتاج أي SDK ──
+var DB_URL = 'https://alnahdah-7dd69-default-rtdb.firebaseio.com/nahda-main-project.json';
+
+var expenses=[], partners=[], plan=[], jadwaLands=[], jadwaProjects=[];
+var selCat = 'عظم';
+
+document.getElementById('inp-date').value = new Date().toISOString().slice(0,10);
+
+// تصنيف
+document.querySelectorAll('.cc').forEach(function(c){
+  c.addEventListener('click', function(){
+    document.querySelectorAll('.cc').forEach(function(x){x.classList.remove('active');});
+    c.classList.add('active');
+    selCat = c.getAttribute('data-cat');
+  });
+});
+
+function toast(msg, bg){
+  var el=document.getElementById('toast');
+  el.textContent=msg; el.style.background=bg||'#1e293b';
+  el.classList.add('show');
+  setTimeout(function(){el.classList.remove('show');},2800);
+}
+
+function setStatus(on){
+  document.getElementById('sdot').className='sdot'+(on?' on':'');
+  document.getElementById('slbl').textContent=on?'متصل ☁️':'غير متصل';
+}
+
+function fmt(v){return (v||0).toLocaleString('en-US',{maximumFractionDigits:0});}
+
+function renderHistory(){
+  var hw=document.getElementById('hw');
+  var hl=document.getElementById('hl');
+  var last=expenses.slice().reverse().slice(0,5);
+  if(!last.length){hw.style.display='none';return;}
+  hw.style.display='flex';
+  hl.innerHTML=last.map(function(e){
+    return '<div class="er"><div><div class="nm">'+e.name+'</div>'
+      +'<div class="mt">'+e.cat+(e.date?' · '+e.date:'')+'</div></div>'
+      +'<div class="am">'+fmt(e.amount)+'</div></div>';
+  }).join('');
+}
+
+function showApp(){
+  document.getElementById('ls').style.display='none';
+  document.getElementById('btn-add').disabled=false;
+  setStatus(true);
+  renderHistory();
+  toast('☁️ جاهز');
+}
+
+function showError(msg){
+  document.getElementById('lmsg').textContent=msg;
+  document.getElementById('retry-btn').style.display='block';
+}
+
+// ── تحميل البيانات عبر REST ──
+function loadData(){
+  document.getElementById('lmsg').textContent='جاري الاتصال...';
+  document.getElementById('retry-btn').style.display='none';
+
+  fetch(DB_URL)
+    .then(function(res){
+      if(!res.ok) throw new Error('HTTP ' + res.status + ' — تحقق من قواعد Firebase');
+      return res.json();
+    })
+    .then(function(d){
+      if(d && typeof d === 'object'){
+        expenses      = d.expenses      ||[];
+        partners      = d.partners      ||[];
+        plan          = d.plan          ||[];
+        jadwaLands    = d.jadwaLands    ||[];
+        jadwaProjects = d.jadwaProjects ||[];
+      }
+      showApp();
+    })
+    .catch(function(err){
+      showError('⚠️ ' + err.message);
+    });
+}
+
+// ── حفظ عبر REST ──
+function saveAll(){
+  fetch(DB_URL, {
+    method: 'GET'
+  }).then(function(r){return r.json();})
+    .then(function(existing){
+      var current = existing || {};
+      current.expenses      = expenses;
+      current.partners      = partners || [];
+      current.plan          = plan || [];
+      current.jadwaLands    = jadwaLands || [];
+      current.jadwaProjects = jadwaProjects || [];
+      current.updatedAt     = Date.now();
+      return fetch(DB_URL, {
+        method: 'PUT',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(current)
+      });
+    })
+    .then(function(r){
+      if(!r.ok) throw new Error('فشل الحفظ');
+      setStatus(true);
+    })
+    .catch(function(){setStatus(false);});
+}
+
+document.getElementById('btn-add').addEventListener('click', function(){
+  var name   = document.getElementById('inp-name').value.trim();
+  var amount = parseFloat(document.getElementById('inp-amount').value);
+  var date   = document.getElementById('inp-date').value;
+  var notes  = document.getElementById('inp-notes').value.trim();
+  if(!name)             {toast('⚠️ أدخل وصف المصروف','#e53e5a');return;}
+  if(!amount||amount<=0){toast('⚠️ أدخل مبلغاً صحيحاً','#e53e5a');return;}
+
+  var btn=document.getElementById('btn-add');
+  btn.disabled=true; btn.textContent='⏳ جاري الحفظ...';
+
+  expenses.push({id:Date.now(),name:name,amount:amount,cat:selCat,date:date,notes:notes,paidBy:''});
+  saveAll();
+
+  setTimeout(function(){
+    document.getElementById('inp-name').value='';
+    document.getElementById('inp-amount').value='';
+    document.getElementById('inp-notes').value='';
+    document.getElementById('inp-date').value=new Date().toISOString().slice(0,10);
+    btn.disabled=false; btn.textContent='💾 حفظ المصروف';
+    toast('✅ تم حفظ المصروف');
+    renderHistory();
+    window.scrollTo(0,0);
+  },700);
+});
+
+// ── بدء ──
+loadData();
+</script>
+</body>
+</html>
